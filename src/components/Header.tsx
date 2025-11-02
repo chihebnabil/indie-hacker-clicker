@@ -1,0 +1,51 @@
+import { DollarSign, TrendingUp, MousePointer2 } from 'lucide-react';
+import { formatNumber } from '../utils/gameUtils';
+
+interface HeaderProps {
+  money: number;
+  moneyPerSecond: number;
+  clickPower: number;
+}
+
+export default function Header({ money, moneyPerSecond, clickPower }: HeaderProps) {
+  return (
+    <div className="flex-none bg-gradient-to-r from-slate-900/95 via-blue-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/20 shadow-2xl p-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/50">
+            <span className="text-xl">💻</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-black bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-lg">
+              Indie Hacker Clicker
+            </h1>
+            <p className="text-[10px] text-gray-400 font-medium">Build Your Empire</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 backdrop-blur-sm border border-emerald-500/30 rounded-lg px-4 py-2 shadow-lg hover:shadow-emerald-500/20 transition-all">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <DollarSign className="w-3 h-3 text-emerald-400" />
+              <div className="text-[10px] text-emerald-300 font-semibold uppercase tracking-wide">Balance</div>
+            </div>
+            <div className="text-lg font-black text-emerald-400">${formatNumber(money)}</div>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500/20 to-cyan-600/20 backdrop-blur-sm border border-blue-500/30 rounded-lg px-4 py-2 shadow-lg hover:shadow-blue-500/20 transition-all">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <TrendingUp className="w-3 h-3 text-blue-400" />
+              <div className="text-[10px] text-blue-300 font-semibold uppercase tracking-wide">Per Second</div>
+            </div>
+            <div className="text-lg font-black text-blue-400">${formatNumber(moneyPerSecond)}</div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500/20 to-pink-600/20 backdrop-blur-sm border border-purple-500/30 rounded-lg px-4 py-2 shadow-lg hover:shadow-purple-500/20 transition-all">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <MousePointer2 className="w-3 h-3 text-purple-400" />
+              <div className="text-[10px] text-purple-300 font-semibold uppercase tracking-wide">Per Click</div>
+            </div>
+            <div className="text-lg font-black text-purple-400">${formatNumber(clickPower)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
