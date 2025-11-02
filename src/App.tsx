@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useGameLogic } from './hooks/useGameLogic';
 import { useAutoSave } from './hooks/useAutoSave';
+import { useSEO } from './hooks/useSEO';
+import { useStructuredData } from './hooks/useStructuredData';
 import { getCurrentCost, formatNumber } from './utils/gameUtils';
 import { initialChallenges, initialAchievements } from './data/challengesData';
 import type { Challenge, Achievement } from './types/challenges';
@@ -81,6 +83,17 @@ export default function IndieHackerGame() {
     goldenCookieClicks,
     bestCombo,
   });
+
+  // SEO - Dynamic title based on game progress
+  useSEO({
+    title: prestigeLevel > 0 
+      ? `💰 $${formatNumber(money)} | Prestige ${prestigeLevel} | Indie Hacker Clicker`
+      : `💰 $${formatNumber(money)} | Indie Hacker Clicker`,
+    description: `Join ${username || 'thousands of players'} in building your indie empire! Currently earning $${formatNumber(moneyPerSecond)}/sec. Prestige Level: ${prestigeLevel}. Best Combo: ${bestCombo}x`,
+  });
+
+  // Structured Data for SEO
+  useStructuredData();
   
   // Load saved game on mount
   useEffect(() => {

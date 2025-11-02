@@ -170,6 +170,64 @@ pnpm dlx convex deploy --prod
 - Redeploy after adding environment variables
 - Make sure variable names start with `VITE_` to be accessible in the app
 
+## SEO Features
+
+This app includes comprehensive SEO optimization:
+
+### Built-in SEO Features
+
+1. **Meta Tags**
+   - Primary meta tags (title, description, keywords, author)
+   - Open Graph tags for social media sharing
+   - Twitter Card tags for Twitter previews
+   - Canonical URLs to prevent duplicate content
+
+2. **Dynamic SEO**
+   - Page title updates with current game progress
+   - Description updates with player stats
+   - Custom hook `useSEO()` for easy SEO management
+
+3. **Structured Data (JSON-LD)**
+   - Schema.org markup for better search engine understanding
+   - Game/WebApplication type
+   - Author information
+   - Rating data
+
+4. **SEO Files**
+   - `robots.txt` - Search engine crawling instructions
+   - `sitemap.xml` - Site structure for search engines
+
+### Customizing SEO
+
+To customize SEO for your deployment:
+
+1. **Update the URL** in `index.html`:
+   - Replace `https://indie-hacker-clicker.vercel.app/` with your actual domain
+   - Update Open Graph and Twitter card URLs
+
+2. **Update sitemap.xml**:
+   - Change the domain in `public/sitemap.xml`
+   - Update `lastmod` date when making major changes
+
+3. **Update robots.txt**:
+   - Modify `public/robots.txt` with your sitemap URL
+
+4. **Add OG Image** (Optional but recommended):
+   - Create a preview image (1200x630px recommended)
+   - Save as `public/og-image.png`
+   - This image will appear when sharing on social media
+
+### SEO Best Practices Applied
+
+✅ Mobile-friendly responsive design  
+✅ Fast loading with Vite optimization  
+✅ Semantic HTML structure  
+✅ Descriptive page titles  
+✅ Meta descriptions under 160 characters  
+✅ Structured data for rich snippets  
+✅ Canonical URLs  
+✅ Social media preview cards  
+
 ## Project Structure
 
 ```

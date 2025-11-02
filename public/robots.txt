@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://indie-hacker-clicker.vercel.app/sitemap.xml
