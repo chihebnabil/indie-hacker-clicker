@@ -31,19 +31,19 @@ export const initialChallenges: Challenge[] = [
 export const initialAchievements: Achievement[] = [
   // Bronze Tier
   { id: 'a1', name: 'Hello World', description: 'Make your first click', icon: '👋', unlocked: false, tier: 'bronze' },
-  { id: 'a2', name: 'First Hire', description: 'Purchase your first building', icon: '🎯', unlocked: false, tier: 'bronze' },
-  { id: 'a3', name: 'Upgraded', description: 'Purchase your first upgrade', icon: '⬆️', unlocked: false, tier: 'bronze' },
+  { id: 'a2', name: 'Combo Starter', description: 'Reach a 10x combo multiplier', icon: '🔥', unlocked: false, tier: 'bronze' },
+  { id: 'a3', name: 'First Hire', description: 'Purchase your first building', icon: '🎯', unlocked: false, tier: 'bronze' },
   { id: 'a4', name: 'Lucky Find', description: 'Click a golden cookie', icon: '🍀', unlocked: false, tier: 'bronze' },
   
   // Silver Tier
   { id: 'a5', name: 'Century Club', description: 'Click 100 times in one session', icon: '💯', unlocked: false, tier: 'silver' },
-  { id: 'a6', name: 'Diversified', description: 'Own at least 1 of 5 different building types', icon: '🎨', unlocked: false, tier: 'silver' },
+  { id: 'a6', name: 'Combo Master', description: 'Reach a 50-hit combo', icon: '⚡', unlocked: false, tier: 'silver' },
   { id: 'a7', name: 'Tech Stack', description: 'Own 10 upgrades', icon: '📚', unlocked: false, tier: 'silver' },
   { id: 'a8', name: 'Frenzy Master', description: 'Activate frenzy mode 5 times', icon: '🔥', unlocked: false, tier: 'silver' },
   
   // Gold Tier
   { id: 'a9', name: 'Millionaire', description: 'Have $1,000,000 at once', icon: '💎', unlocked: false, tier: 'gold' },
-  { id: 'a10', name: 'Power User', description: 'Click 10,000 times total', icon: '⚡', unlocked: false, tier: 'gold' },
+  { id: 'a10', name: 'Combo Legend', description: 'Reach a 100-hit combo', icon: '💥', unlocked: false, tier: 'gold' },
   { id: 'a11', name: 'Fully Upgraded', description: 'Purchase all available upgrades', icon: '✨', unlocked: false, tier: 'gold' },
   { id: 'a12', name: 'Production Line', description: 'Own 100 total buildings', icon: '🏭', unlocked: false, tier: 'gold' },
   

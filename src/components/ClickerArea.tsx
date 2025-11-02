@@ -7,6 +7,7 @@ interface ClickerAreaProps {
   totalClicks: number;
   totalBuildings: number;
   ownedUpgrades: number;
+  comboMultiplier: number;
 }
 
 export default function ClickerArea({ 
@@ -14,8 +15,24 @@ export default function ClickerArea({
   onBigClick, 
   totalClicks, 
   totalBuildings, 
-  ownedUpgrades 
+  ownedUpgrades,
+  comboMultiplier
 }: ClickerAreaProps) {
+  const getComboGradient = () => {
+    if (comboMultiplier >= 10) return 'from-red-500 via-orange-500 to-yellow-500';
+    if (comboMultiplier >= 5) return 'from-orange-500 via-yellow-500 to-amber-500';
+    if (comboMultiplier >= 3) return 'from-yellow-500 via-amber-500 to-orange-400';
+    if (comboMultiplier >= 2) return 'from-blue-400 via-cyan-500 to-blue-500';
+    return 'from-blue-500 via-purple-600 to-pink-600';
+  };
+  
+  const getComboShadow = () => {
+    if (comboMultiplier >= 10) return 'shadow-red-500/50';
+    if (comboMultiplier >= 5) return 'shadow-orange-500/50';
+    if (comboMultiplier >= 3) return 'shadow-yellow-500/50';
+    if (comboMultiplier >= 2) return 'shadow-cyan-500/50';
+    return 'shadow-purple-500/50';
+  };
   return (
     <div className="w-1/3 flex flex-col items-center justify-center p-6 border-r border-white/10 bg-gradient-to-br from-slate-900/50 via-slate-800/30 to-slate-900/50 relative overflow-hidden">
       {/* Animated background */}
@@ -27,7 +44,7 @@ export default function ClickerArea({
       <div className="relative z-10 flex flex-col items-center">
         <button
           onClick={onBigClick}
-          className={`relative group ${frenzyMode ? 'bg-gradient-to-br from-red-500 via-orange-500 to-yellow-500 animate-pulse shadow-2xl shadow-orange-500/50' : 'bg-gradient-to-br from-blue-500 via-purple-600 to-pink-600 shadow-2xl shadow-purple-500/50'} hover:scale-110 active:scale-90 rounded-full p-16 transition-all duration-200 overflow-hidden`}
+          className={`relative group bg-gradient-to-br ${frenzyMode ? 'from-red-500 via-orange-500 to-yellow-500 animate-pulse shadow-orange-500/50' : getComboGradient()} ${frenzyMode ? 'shadow-2xl shadow-orange-500/50' : `shadow-2xl ${getComboShadow()}`} hover:scale-110 active:scale-90 rounded-full p-16 transition-all duration-200 overflow-hidden ${comboMultiplier >= 5 ? 'animate-pulse' : ''}`}
         >
           {/* Shine effect */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>

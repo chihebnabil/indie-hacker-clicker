@@ -10,6 +10,7 @@ import Store from './components/Store';
 import Notification from './components/Notification';
 import FrenzyIndicator from './components/FrenzyIndicator';
 import GoldenCookieComponent from './components/GoldenCookie';
+import ComboIndicator from './components/ComboIndicator';
 
 export default function IndieHackerGame() {
   const {
@@ -45,6 +46,12 @@ export default function IndieHackerGame() {
   const [prestigeTokens, setPrestigeTokens] = useState(0);
   const [frenzyCount, setFrenzyCount] = useState(0);
   const [goldenCookieClicks, setGoldenCookieClicks] = useState(0);
+  
+  // Combo system state
+  const [comboCount, setComboCount] = useState(0);
+  const [comboMultiplier, setComboMultiplier] = useState(1);
+  const [lastClickTime, setLastClickTime] = useState(0);
+  const [bestCombo, setBestCombo] = useState(0);
   
   const prestigeMultiplier = 1 + (prestigeTokens * 0.1);
   
@@ -135,16 +142,60 @@ export default function IndieHackerGame() {
   };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const earnings = frenzyMode ? clickPower * 7 * prestigeMultiplier : clickPower * prestigeMultiplier;
+    const now = Date.now();
+    const timeSinceLastClick = now - lastClickTime;
+    
+    // Update combo based on click timing
+    if (timeSinceLastClick < 2000) {
+      // Build combo
+      setComboCount(prev => {
+        const newCombo = prev + 1;
+        
+        // Update combo multiplier based on combo count
+        let newMultiplier = 1;
+        if (newCombo >= 100) newMultiplier = 10;
+        else if (newCombo >= 50) newMultiplier = 5;
+        else if (newCombo >= 25) newMultiplier = 3;
+        else if (newCombo >= 10) newMultiplier = 2;
+        
+        setComboMultiplier(newMultiplier);
+        
+        // Track best combo
+        if (newCombo > bestCombo) {
+          setBestCombo(newCombo);
+          if (newCombo === 10) checkAchievement('a2');
+          if (newCombo === 50) {
+            showNotification('🔥 50 Hit Combo!');
+            checkAchievement('a6');
+          }
+          if (newCombo === 100) {
+            showNotification('🔥🔥 100 Hit MEGA COMBO!');
+            checkAchievement('a10');
+          }
+        }
+        
+        return newCombo;
+      });
+    } else {
+      // Reset combo
+      setComboCount(1);
+      setComboMultiplier(1);
+    }
+    
+    setLastClickTime(now);
+    
+    // Calculate earnings with combo multiplier
+    const baseEarnings = frenzyMode ? clickPower * 7 * prestigeMultiplier : clickPower * prestigeMultiplier;
+    const earnings = baseEarnings * comboMultiplier;
+    
     setMoney(m => m + earnings);
     updateTotalEarned(t => t + earnings);
     setTotalClicks(c => {
       const newClicks = c + 1;
       updateChallengeProgress('clicks', newClicks);
       if (newClicks === 1) checkAchievement('a1');
-      if (newClicks >= 100) checkAchievement('a2');
-      if (newClicks >= 1000) checkAchievement('a5');
-      if (newClicks >= 10000) checkAchievement('a8');
+      if (newClicks >= 100) checkAchievement('a5');
+      if (newClicks >= 10000) checkAchievement('a14');
       return newClicks;
     });
 
@@ -154,9 +205,21 @@ export default function IndieHackerGame() {
 
     const floater = document.createElement('div');
     floater.className = 'floating-number';
-    floater.textContent = `+$${formatNumber(earnings)}`;
+    floater.textContent = comboMultiplier > 1 ? `+$${formatNumber(earnings)} (×${comboMultiplier})` : `+$${formatNumber(earnings)}`;
     floater.style.left = `${x}px`;
     floater.style.top = `${y}px`;
+    if (comboMultiplier >= 10) {
+      floater.style.color = '#ef4444';
+      floater.style.fontSize = '36px';
+      floater.style.textShadow = '0 0 20px rgba(239, 68, 68, 0.8)';
+    } else if (comboMultiplier >= 5) {
+      floater.style.color = '#f59e0b';
+      floater.style.fontSize = '32px';
+      floater.style.textShadow = '0 0 15px rgba(245, 158, 11, 0.8)';
+    } else if (comboMultiplier >= 3) {
+      floater.style.color = '#fbbf24';
+      floater.style.fontSize = '28px';
+    }
     e.currentTarget.appendChild(floater);
 
     setTimeout(() => floater.remove(), 1000);
@@ -231,43 +294,56 @@ export default function IndieHackerGame() {
   const ownedUpgrades = Object.values(upgrades).filter(u => u.owned).length;
   const availableUpgrades = Object.values(upgrades).filter(u => !u.owned).length;
   
+  // Reset combo after 2 seconds of no clicking
+  useEffect(() => {
+    if (comboCount === 0) return;
+    
+    const timer = setTimeout(() => {
+      const now = Date.now();
+      if (now - lastClickTime >= 2000) {
+        setComboCount(0);
+        setComboMultiplier(1);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [lastClickTime, comboCount]);
+  
   // Track money-based challenges and achievements
   useEffect(() => {
     updateChallengeProgress('money', totalEarned2);
     updateChallengeProgress('mps', moneyPerSecond);
     
-    if (money >= 100) checkAchievement('a3');
-    if (money >= 1000000) checkAchievement('a6');
-    if (money >= 1000000000) checkAchievement('a9');
-    if (totalEarned2 >= 1000000) checkAchievement('a12');
+    if (money >= 1000000) checkAchievement('a9');
+    if (money >= 1000000000) checkAchievement('a13');
+    if (moneyPerSecond >= 10000000) checkAchievement('a16');
   }, [money, totalEarned2, moneyPerSecond]);
   
   // Track building-based challenges and achievements
   useEffect(() => {
     updateChallengeProgress('buildings', totalBuildings);
     
-    if (totalBuildings >= 1) checkAchievement('a4');
-    if (totalBuildings >= 50) checkAchievement('a7');
-    if (totalBuildings >= 200) checkAchievement('a10');
-    if (totalBuildings >= 500) checkAchievement('a13');
+    if (totalBuildings >= 1) checkAchievement('a3');
+    if (totalBuildings >= 100) checkAchievement('a12');
+    if (totalBuildings >= 500) checkAchievement('a15');
   }, [totalBuildings]);
   
   // Track upgrade-based challenges and achievements
   useEffect(() => {
     updateChallengeProgress('upgrades', ownedUpgrades);
     
-    if (ownedUpgrades >= 5) checkAchievement('a11');
-    if (ownedUpgrades >= 15) checkAchievement('a14');
+    if (ownedUpgrades >= 10) checkAchievement('a7');
+    if (ownedUpgrades >= 22) checkAchievement('a11');
   }, [ownedUpgrades]);
   
   // Track golden cookie clicks
   useEffect(() => {
-    if (goldenCookieClicks >= 10) checkAchievement('a15');
+    if (goldenCookieClicks >= 1) checkAchievement('a4');
   }, [goldenCookieClicks]);
   
   // Track frenzy mode activations
   useEffect(() => {
-    if (frenzyCount >= 5) checkAchievement('a16');
+    if (frenzyCount >= 5) checkAchievement('a8');
   }, [frenzyCount]);
 
   return (
@@ -391,6 +467,7 @@ export default function IndieHackerGame() {
       {notification && <Notification message={notification} />}
       {frenzyMode && <FrenzyIndicator frenzyTimer={frenzyTimer} />}
       {goldenCookie && <GoldenCookieComponent goldenCookie={goldenCookie} onGoldenCookieClick={clickGoldenCookie} />}
+      <ComboIndicator comboCount={comboCount} comboMultiplier={comboMultiplier} />
 
       <div className="relative z-10">
         <Header money={money} moneyPerSecond={moneyPerSecond} clickPower={clickPower} />
@@ -403,6 +480,7 @@ export default function IndieHackerGame() {
           totalClicks={totalClicks}
           totalBuildings={totalBuildings}
           ownedUpgrades={ownedUpgrades}
+          comboMultiplier={comboMultiplier}
         />
 
         <Store
