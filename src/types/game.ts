@@ -46,4 +46,6 @@ export interface GameState {
   notification: string | null;
   frenzyMode: boolean;
   frenzyTimer: number;
+  frenzyCount: number;
+  goldenCookieClicks: number;
 }

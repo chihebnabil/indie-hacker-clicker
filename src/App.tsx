@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameLogic } from './hooks/useGameLogic';
 import { getCurrentCost, formatNumber } from './utils/gameUtils';
+import { initialChallenges, initialAchievements } from './data/challengesData';
+import type { Challenge, Achievement } from './types/challenges';
+import type { Buildings, Upgrades } from './types/game';
 import Header from './components/Header';
 import ClickerArea from './components/ClickerArea';
 import Store from './components/Store';
@@ -34,13 +37,116 @@ export default function IndieHackerGame() {
     showNotification
   } = useGameLogic();
 
-  const [selectedTab, setSelectedTab] = useState<'buildings' | 'upgrades'>('buildings');
+  const [selectedTab, setSelectedTab] = useState<'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige'>('buildings');
+  const [totalEarned2, setTotalEarned2] = useState(0);
+  const [challenges, setChallenges] = useState<Challenge[]>(initialChallenges);
+  const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
+  const [prestigeLevel, setPrestigeLevel] = useState(0);
+  const [prestigeTokens, setPrestigeTokens] = useState(0);
+  const [frenzyCount, setFrenzyCount] = useState(0);
+  const [goldenCookieClicks, setGoldenCookieClicks] = useState(0);
+  
+  const prestigeMultiplier = 1 + (prestigeTokens * 0.1);
+  
+  // Override setTotalEarned to also update totalEarned2
+  const updateTotalEarned = (updater: React.SetStateAction<number>) => {
+    setTotalEarned(updater);
+    if (typeof updater === 'function') {
+      setTotalEarned2(prev => updater(prev));
+    } else {
+      setTotalEarned2(updater);
+    }
+  };
+  
+  const checkAchievement = (id: string) => {
+    setAchievements(prev => prev.map(a => {
+      if (a.id === id && !a.unlocked) {
+        showNotification(`🏆 Achievement Unlocked: ${a.name}!`);
+        return { ...a, unlocked: true };
+      }
+      return a;
+    }));
+  };
+  
+  const updateChallengeProgress = (type: Challenge['type'], value: number) => {
+    setChallenges(prev => prev.map(c => {
+      if (c.type === type && !c.completed) {
+        const newProgress = Math.max(c.progress, value);
+        if (newProgress >= c.goal && !c.completed) {
+          showNotification(`✨ Challenge Completed: ${c.name}!`);
+          // Apply reward
+          if (c.reward === 'Click Power') {
+            setClickPower(p => p + c.rewardValue);
+          } else if (c.reward === 'Money Bonus') {
+            setMoney(m => m + c.rewardValue);
+          }
+          return { ...c, progress: c.goal, completed: true };
+        }
+        return { ...c, progress: newProgress };
+      }
+      return c;
+    }));
+  };
+  
+  const handlePrestige = () => {
+    if (totalEarned2 >= 1000000000) {
+      const tokensToGain = Math.floor(totalEarned2 / 1000000000);
+      setPrestigeLevel(l => l + 1);
+      setPrestigeTokens(t => t + tokensToGain);
+      
+      // Reset game state but keep achievements
+      setMoney(0);
+      setTotalEarned(0);
+      setTotalEarned2(0);
+      setClickPower(1);
+      setTotalClicks(0);
+      
+      // Reset buildings to initial state
+      const resetBuildings: Buildings = {
+        cursor: { ...buildings.cursor, count: 0 },
+        grandma: { ...buildings.grandma, count: 0 },
+        farm: { ...buildings.farm, count: 0 },
+        mine: { ...buildings.mine, count: 0 },
+        factory: { ...buildings.factory, count: 0 },
+        bank: { ...buildings.bank, count: 0 },
+        temple: { ...buildings.temple, count: 0 },
+        wizardTower: { ...buildings.wizardTower, count: 0 },
+        shipment: { ...buildings.shipment, count: 0 },
+        alchemyLab: { ...buildings.alchemyLab, count: 0 },
+        portal: { ...buildings.portal, count: 0 },
+        timeMachine: { ...buildings.timeMachine, count: 0 },
+      };
+      setBuildings(resetBuildings);
+      
+      // Reset upgrades - mark all as not purchased
+      const resetUpgrades: Upgrades = Object.keys(upgrades).reduce((acc, key) => {
+        acc[key as keyof Upgrades] = { ...upgrades[key as keyof Upgrades], owned: false };
+        return acc;
+      }, {} as Upgrades);
+      setUpgrades(resetUpgrades);
+      
+      setChallenges(initialChallenges);
+      setFrenzyCount(0);
+      setGoldenCookieClicks(0);
+      
+      showNotification(`🌟 Prestige ${prestigeLevel + 1}! +${tokensToGain} Token${tokensToGain > 1 ? 's' : ''}!`);
+      setSelectedTab('buildings');
+    }
+  };
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const earnings = frenzyMode ? clickPower * 7 : clickPower;
+    const earnings = frenzyMode ? clickPower * 7 * prestigeMultiplier : clickPower * prestigeMultiplier;
     setMoney(m => m + earnings);
-    setTotalEarned(t => t + earnings);
-    setTotalClicks(c => c + 1);
+    updateTotalEarned(t => t + earnings);
+    setTotalClicks(c => {
+      const newClicks = c + 1;
+      updateChallengeProgress('clicks', newClicks);
+      if (newClicks === 1) checkAchievement('a1');
+      if (newClicks >= 100) checkAchievement('a2');
+      if (newClicks >= 1000) checkAchievement('a5');
+      if (newClicks >= 10000) checkAchievement('a8');
+      return newClicks;
+    });
 
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -100,19 +206,22 @@ export default function IndieHackerGame() {
   const clickGoldenCookie = () => {
     if (!goldenCookie) return;
 
+    setGoldenCookieClicks(c => c + 1);
+
     if (goldenCookie.type === 'bonus') {
       const bonus = Math.max(moneyPerSecond * 60 * 13, clickPower * 13);
       setMoney(m => m + bonus);
-      setTotalEarned(t => t + bonus);
+      updateTotalEarned(t => t + bonus);
       showNotification(`💰 +$${formatNumber(bonus)}`);
     } else if (goldenCookie.type === 'frenzy') {
       setFrenzyMode(true);
       setFrenzyTimer(77);
+      setFrenzyCount(c => c + 1);
       showNotification('🔥 FRENZY x7!');
     } else if (goldenCookie.type === 'lucky') {
       const lucky = Math.max(moneyPerSecond * 900, money * 0.15);
       setMoney(m => m + lucky);
-      setTotalEarned(t => t + lucky);
+      updateTotalEarned(t => t + lucky);
       showNotification(`🍀 +$${formatNumber(lucky)}`);
     }
     setGoldenCookie(null);
@@ -121,6 +230,45 @@ export default function IndieHackerGame() {
   const totalBuildings = Object.values(buildings).reduce((sum, b) => sum + b.count, 0);
   const ownedUpgrades = Object.values(upgrades).filter(u => u.owned).length;
   const availableUpgrades = Object.values(upgrades).filter(u => !u.owned).length;
+  
+  // Track money-based challenges and achievements
+  useEffect(() => {
+    updateChallengeProgress('money', totalEarned2);
+    updateChallengeProgress('mps', moneyPerSecond);
+    
+    if (money >= 100) checkAchievement('a3');
+    if (money >= 1000000) checkAchievement('a6');
+    if (money >= 1000000000) checkAchievement('a9');
+    if (totalEarned2 >= 1000000) checkAchievement('a12');
+  }, [money, totalEarned2, moneyPerSecond]);
+  
+  // Track building-based challenges and achievements
+  useEffect(() => {
+    updateChallengeProgress('buildings', totalBuildings);
+    
+    if (totalBuildings >= 1) checkAchievement('a4');
+    if (totalBuildings >= 50) checkAchievement('a7');
+    if (totalBuildings >= 200) checkAchievement('a10');
+    if (totalBuildings >= 500) checkAchievement('a13');
+  }, [totalBuildings]);
+  
+  // Track upgrade-based challenges and achievements
+  useEffect(() => {
+    updateChallengeProgress('upgrades', ownedUpgrades);
+    
+    if (ownedUpgrades >= 5) checkAchievement('a11');
+    if (ownedUpgrades >= 15) checkAchievement('a14');
+  }, [ownedUpgrades]);
+  
+  // Track golden cookie clicks
+  useEffect(() => {
+    if (goldenCookieClicks >= 10) checkAchievement('a15');
+  }, [goldenCookieClicks]);
+  
+  // Track frenzy mode activations
+  useEffect(() => {
+    if (frenzyCount >= 5) checkAchievement('a16');
+  }, [frenzyCount]);
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white overflow-hidden relative" ref={gameAreaRef}>
@@ -269,6 +417,13 @@ export default function IndieHackerGame() {
           onBuyBuilding={buyBuilding}
           onBuyUpgrade={buyUpgrade}
           getBuildingProduction={getBuildingProduction}
+          challenges={challenges}
+          achievements={achievements}
+          totalEarned={totalEarned2}
+          prestigeLevel={prestigeLevel}
+          prestigeTokens={prestigeTokens}
+          prestigeMultiplier={prestigeMultiplier}
+          onPrestige={handlePrestige}
         />
       </div>
     </div>
