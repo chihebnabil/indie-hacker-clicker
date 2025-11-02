@@ -4,6 +4,7 @@ import { v } from "convex/values";
 export default defineSchema({
   gameStates: defineTable({
     userId: v.string(),
+    username: v.string(),
     money: v.number(),
     totalEarned: v.number(),
     totalEarned2: v.number(),

@@ -12,6 +12,7 @@ import Notification from './components/Notification';
 import FrenzyIndicator from './components/FrenzyIndicator';
 import GoldenCookieComponent from './components/GoldenCookie';
 import ComboIndicator from './components/ComboIndicator';
+import UsernameModal from './components/UsernameModal';
 
 export default function IndieHackerGame() {
   const {
@@ -39,10 +40,17 @@ export default function IndieHackerGame() {
     showNotification
   } = useGameLogic();
 
-  const [selectedTab, setSelectedTab] = useState<'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige'>('buildings');
+  const [selectedTab, setSelectedTab] = useState<'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige' | 'leaderboard'>('buildings');
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [totalEarned2, setTotalEarned2] = useState(0);
   const [challenges, setChallenges] = useState<Challenge[]>(initialChallenges);
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
+
+  // Handle username save
+  const handleUsernameSave = (newUsername: string) => {
+    updateUsername(newUsername);
+    setShowUsernameModal(false);
+  };
   const [prestigeLevel, setPrestigeLevel] = useState(0);
   const [prestigeTokens, setPrestigeTokens] = useState(0);
   const [frenzyCount, setFrenzyCount] = useState(0);
@@ -57,7 +65,7 @@ export default function IndieHackerGame() {
   const prestigeMultiplier = 1 + (prestigeTokens * 0.1);
   
   // Auto-save game state
-  const { loadedGame, isLoading } = useAutoSave({
+  const { loadedGame, username, updateUsername, isLoading } = useAutoSave({
     money,
     totalEarned: 0, // We'll get from useGameLogic
     totalEarned2,
@@ -509,7 +517,13 @@ export default function IndieHackerGame() {
       <ComboIndicator comboCount={comboCount} comboMultiplier={comboMultiplier} />
 
       <div className="relative z-10">
-        <Header money={money} moneyPerSecond={moneyPerSecond} clickPower={clickPower} />
+        <Header 
+          money={money} 
+          moneyPerSecond={moneyPerSecond} 
+          clickPower={clickPower}
+          username={username}
+          onUsernameClick={() => setShowUsernameModal(true)}
+        />
       </div>
 
       <div className="flex-1 flex overflow-hidden relative z-10">
@@ -543,6 +557,14 @@ export default function IndieHackerGame() {
           onPrestige={handlePrestige}
         />
       </div>
+
+      {showUsernameModal && (
+        <UsernameModal
+          currentUsername={username}
+          onSave={handleUsernameSave}
+          onClose={() => setShowUsernameModal(false)}
+        />
+      )}
     </div>
   );
 }

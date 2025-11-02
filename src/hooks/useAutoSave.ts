@@ -49,11 +49,41 @@ interface GameState {
 
 export function useAutoSave(gameState: GameState, enabled: boolean = true) {
   const [userId] = useState(getUserId());
+  const [username, setUsernameState] = useState(getUsername());
   const [hasLoaded, setHasLoaded] = useState(false);
   const saveGame = useMutation(api.gameState.saveGame);
   const loadedGame = useQuery(api.gameState.loadGame, { userId });
   const lastSaveRef = useRef<string>('');
   const saveTimeoutRef = useRef<number | undefined>(undefined);
+
+  // Function to update username and trigger re-render
+  const updateUsername = (newUsername: string) => {
+    setUsername(newUsername);
+    setUsernameState(newUsername);
+    // Force a save immediately with new username
+    saveGame({
+      userId,
+      username: newUsername,
+      gameState: {
+        money: gameState.money,
+        totalEarned: gameState.totalEarned,
+        totalEarned2: gameState.totalEarned2,
+        clickPower: gameState.clickPower,
+        totalClicks: gameState.totalClicks,
+        buildings: gameState.buildings,
+        upgrades: gameState.upgrades,
+        challenges: gameState.challenges,
+        achievements: gameState.achievements,
+        prestigeLevel: gameState.prestigeLevel,
+        prestigeTokens: gameState.prestigeTokens,
+        frenzyCount: gameState.frenzyCount,
+        goldenCookieClicks: gameState.goldenCookieClicks,
+        bestCombo: gameState.bestCombo,
+      },
+    }).then(() => {
+      console.log('✅ Username updated and saved');
+    });
+  };
   
   // Mark as loaded once we get the initial data
   useEffect(() => {
@@ -81,6 +111,7 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
       try {
         await saveGame({
           userId,
+          username,
           gameState: {
             money: gameState.money,
             totalEarned: gameState.totalEarned,
@@ -144,5 +175,5 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, userId, enabled]);
 
-  return { loadedGame, userId, isLoading: loadedGame === undefined };
+  return { loadedGame, userId, username, updateUsername, isLoading: loadedGame === undefined };
 }

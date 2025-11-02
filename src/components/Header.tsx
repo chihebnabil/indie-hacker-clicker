@@ -1,13 +1,15 @@
-import { DollarSign, TrendingUp, MousePointer2 } from 'lucide-react';
+import { DollarSign, TrendingUp, MousePointer2, User } from 'lucide-react';
 import { formatNumber } from '../utils/gameUtils';
 
 interface HeaderProps {
   money: number;
   moneyPerSecond: number;
   clickPower: number;
+  username: string;
+  onUsernameClick: () => void;
 }
 
-export default function Header({ money, moneyPerSecond, clickPower }: HeaderProps) {
+export default function Header({ money, moneyPerSecond, clickPower, username, onUsernameClick }: HeaderProps) {
   return (
     <div className="flex-none bg-gradient-to-r from-slate-900/95 via-blue-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/20 shadow-2xl p-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -33,6 +35,19 @@ export default function Header({ money, moneyPerSecond, clickPower }: HeaderProp
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Username Button */}
+          <button
+            onClick={onUsernameClick}
+            className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm border border-slate-600/50 rounded-lg px-4 py-2 shadow-lg hover:shadow-blue-500/20 hover:border-blue-500/50 transition-all group"
+          >
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+              <div className="text-sm font-bold text-gray-300 group-hover:text-white transition-colors">
+                {username}
+              </div>
+            </div>
+          </button>
+          
           <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 backdrop-blur-sm border border-emerald-500/30 rounded-lg px-4 py-2 shadow-lg hover:shadow-emerald-500/20 transition-all">
             <div className="flex items-center gap-1.5 mb-0.5">
               <DollarSign className="w-3 h-3 text-emerald-400" />

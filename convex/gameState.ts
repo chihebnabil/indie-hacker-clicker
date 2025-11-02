@@ -5,6 +5,7 @@ import { v } from "convex/values";
 export const saveGame = mutation({
   args: {
     userId: v.string(),
+    username: v.string(),
     gameState: v.object({
       money: v.number(),
       totalEarned: v.number(),
@@ -32,6 +33,7 @@ export const saveGame = mutation({
     if (existing) {
       // Update existing save
       await ctx.db.patch(existing._id, {
+        username: args.username,
         ...args.gameState,
         lastSaved: Date.now(),
       });
@@ -40,6 +42,7 @@ export const saveGame = mutation({
       // Create new save
       await ctx.db.insert("gameStates", {
         userId: args.userId,
+        username: args.username,
         ...args.gameState,
         lastSaved: Date.now(),
       });
@@ -75,5 +78,29 @@ export const deleteGame = mutation({
       return { success: true };
     }
     return { success: false };
+  },
+});
+
+// Get leaderboard - top players by total earned
+export const getLeaderboard = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const limit = args.limit || 10;
+    const allGames = await ctx.db.query("gameStates").collect();
+    
+    // Sort by totalEarned2 (lifetime earnings) descending
+    const sorted = allGames
+      .sort((a, b) => b.totalEarned2 - a.totalEarned2)
+      .slice(0, limit);
+    
+    return sorted.map((game, index) => ({
+      rank: index + 1,
+      username: game.username,
+      totalEarned: game.totalEarned2,
+      prestigeLevel: game.prestigeLevel,
+      prestigeTokens: game.prestigeTokens,
+      bestCombo: game.bestCombo,
+      totalClicks: game.totalClicks,
+    }));
   },
 });

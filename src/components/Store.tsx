@@ -1,4 +1,4 @@
-import { Rocket, Sparkles, Trophy, Award, RotateCcw } from 'lucide-react';
+import { Rocket, Sparkles, Trophy, Award, RotateCcw, Users } from 'lucide-react';
 import type { Buildings, Upgrades } from '../types/game';
 import type { Challenge, Achievement } from '../types/challenges';
 import BuildingCard from './BuildingCard';
@@ -6,10 +6,11 @@ import UpgradeCard from './UpgradeCard';
 import ChallengeCard from './ChallengeCard';
 import AchievementCard from './AchievementCard';
 import PrestigePanel from './PrestigePanel';
+import Leaderboard from './Leaderboard';
 
 interface StoreProps {
-    selectedTab: 'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige';
-    setSelectedTab: (tab: 'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige') => void;
+    selectedTab: 'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige' | 'leaderboard';
+    setSelectedTab: (tab: 'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige' | 'leaderboard') => void;
     buildings: Buildings;
     upgrades: Upgrades;
     money: number;
@@ -146,6 +147,21 @@ export default function Store({
                         )}
                     </div>
                 </button>
+                <button
+                    onClick={() => setSelectedTab('leaderboard')}
+                    className={`relative flex-1 min-w-fit px-4 py-3 font-bold transition-all duration-300 ${selectedTab === 'leaderboard'
+                            ? 'bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow-lg shadow-cyan-500/30'
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                >
+                    {selectedTab === 'leaderboard' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+                    )}
+                    <div className="relative z-10 flex items-center justify-center gap-1.5">
+                        <Users className="w-3.5 h-3.5" />
+                        <span className="text-xs">Leaderboard</span>
+                    </div>
+                </button>
             </div>
 
             {/* Content */}
@@ -209,6 +225,10 @@ export default function Store({
                             canPrestige={canPrestige}
                             onPrestige={onPrestige}
                         />
+                    </div>
+                ) : selectedTab === 'leaderboard' ? (
+                    <div className="max-w-4xl mx-auto w-full">
+                        <Leaderboard />
                     </div>
                 ) : null}
             </div>
