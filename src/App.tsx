@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGameLogic } from './hooks/useGameLogic';
+import { useAutoSave } from './hooks/useAutoSave';
 import { getCurrentCost, formatNumber } from './utils/gameUtils';
 import { initialChallenges, initialAchievements } from './data/challengesData';
 import type { Challenge, Achievement } from './types/challenges';
@@ -54,6 +55,44 @@ export default function IndieHackerGame() {
   const [bestCombo, setBestCombo] = useState(0);
   
   const prestigeMultiplier = 1 + (prestigeTokens * 0.1);
+  
+  // Auto-save game state
+  const { loadedGame, isLoading } = useAutoSave({
+    money,
+    totalEarned: 0, // We'll get from useGameLogic
+    totalEarned2,
+    clickPower,
+    totalClicks,
+    buildings,
+    upgrades,
+    challenges,
+    achievements,
+    prestigeLevel,
+    prestigeTokens,
+    frenzyCount,
+    goldenCookieClicks,
+    bestCombo,
+  });
+  
+  // Load saved game on mount
+  useEffect(() => {
+    if (loadedGame && !isLoading) {
+      setMoney(loadedGame.money);
+      setTotalEarned2(loadedGame.totalEarned2);
+      setClickPower(loadedGame.clickPower);
+      setTotalClicks(loadedGame.totalClicks);
+      setBuildings(loadedGame.buildings);
+      setUpgrades(loadedGame.upgrades);
+      setChallenges(loadedGame.challenges as Challenge[]);
+      setAchievements(loadedGame.achievements as Achievement[]);
+      setPrestigeLevel(loadedGame.prestigeLevel);
+      setPrestigeTokens(loadedGame.prestigeTokens);
+      setFrenzyCount(loadedGame.frenzyCount);
+      setGoldenCookieClicks(loadedGame.goldenCookieClicks);
+      setBestCombo(loadedGame.bestCombo);
+      showNotification('💾 Game loaded!');
+    }
+  }, [loadedGame, isLoading]);
   
   // Override setTotalEarned to also update totalEarned2
   const updateTotalEarned = (updater: React.SetStateAction<number>) => {
