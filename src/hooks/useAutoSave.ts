@@ -13,12 +13,12 @@ const getUserId = () => {
   return userId;
 };
 
-// Get or prompt for username
+// Get or set default username
 export const getUsername = () => {
-  if (typeof window === 'undefined') return 'Anonymous';
+  if (typeof window === 'undefined') return 'anonym';
   let username = localStorage.getItem('indie-hacker-username');
   if (!username) {
-    username = prompt('Enter your username for the leaderboard:') || 'Anonymous';
+    username = 'anonym';
     localStorage.setItem('indie-hacker-username', username);
   }
   return username;
@@ -55,6 +55,38 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
   const loadedGame = useQuery(api.gameState.loadGame, { userId });
   const lastSaveRef = useRef<string>('');
   const saveTimeoutRef = useRef<number | undefined>(undefined);
+
+  // Function to manually trigger save
+  const manualSave = async () => {
+    try {
+      await saveGame({
+        userId,
+        username,
+        gameState: {
+          money: gameState.money,
+          totalEarned: gameState.totalEarned,
+          totalEarned2: gameState.totalEarned2,
+          clickPower: gameState.clickPower,
+          totalClicks: gameState.totalClicks,
+          buildings: gameState.buildings,
+          upgrades: gameState.upgrades,
+          challenges: gameState.challenges,
+          achievements: gameState.achievements,
+          prestigeLevel: gameState.prestigeLevel,
+          prestigeTokens: gameState.prestigeTokens,
+          frenzyCount: gameState.frenzyCount,
+          goldenCookieClicks: gameState.goldenCookieClicks,
+          bestCombo: gameState.bestCombo,
+        },
+      });
+      lastSaveRef.current = JSON.stringify(gameState);
+      console.log('✅ Game manually saved');
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to save game:', error);
+      return false;
+    }
+  };
 
   // Function to update username and trigger re-render
   const updateUsername = (newUsername: string) => {
@@ -175,5 +207,5 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, userId, enabled]);
 
-  return { loadedGame, userId, username, updateUsername, isLoading: loadedGame === undefined };
+  return { loadedGame, userId, username, updateUsername, manualSave, isLoading: loadedGame === undefined };
 }

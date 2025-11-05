@@ -1,4 +1,4 @@
-import { DollarSign, TrendingUp, MousePointer2, User } from 'lucide-react';
+import { DollarSign, TrendingUp, MousePointer2, User, Save } from 'lucide-react';
 import { formatNumber } from '../utils/gameUtils';
 
 interface HeaderProps {
@@ -7,9 +7,10 @@ interface HeaderProps {
   clickPower: number;
   username: string;
   onUsernameClick: () => void;
+  onSaveClick?: () => void;
 }
 
-export default function Header({ money, moneyPerSecond, clickPower, username, onUsernameClick }: HeaderProps) {
+export default function Header({ money, moneyPerSecond, clickPower, username, onUsernameClick, onSaveClick }: HeaderProps) {
   return (
     <div className="flex-none bg-gradient-to-r from-slate-900/95 via-blue-900/95 to-slate-900/95 backdrop-blur-xl border-b border-white/20 shadow-2xl p-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -47,6 +48,21 @@ export default function Header({ money, moneyPerSecond, clickPower, username, on
               </div>
             </div>
           </button>
+          
+          {/* Save Button */}
+          {onSaveClick && (
+            <button
+              onClick={onSaveClick}
+              className="bg-gradient-to-br from-green-600/80 to-emerald-600/80 backdrop-blur-sm border border-green-500/50 rounded-lg px-4 py-2 shadow-lg hover:shadow-green-500/30 hover:border-green-400/50 transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <Save className="w-4 h-4 text-green-200 group-hover:text-white transition-colors" />
+                <div className="text-sm font-bold text-green-100 group-hover:text-white transition-colors">
+                  Save
+                </div>
+              </div>
+            </button>
+          )}
           
           <div className="bg-gradient-to-br from-emerald-500/20 to-green-600/20 backdrop-blur-sm border border-emerald-500/30 rounded-lg px-4 py-2 shadow-lg hover:shadow-emerald-500/20 transition-all">
             <div className="flex items-center gap-1.5 mb-0.5">

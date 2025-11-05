@@ -58,6 +58,16 @@ export default function IndieHackerGame() {
     updateUsername(newUsername);
     setShowUsernameModal(false);
   };
+
+  // Handle manual save
+  const handleManualSave = async () => {
+    const success = await manualSave();
+    if (success) {
+      showNotification('💾 Game saved successfully!');
+    } else {
+      showNotification('❌ Failed to save game');
+    }
+  };
   const [frenzyCount, setFrenzyCount] = useState(0);
   const [goldenCookieClicks, setGoldenCookieClicks] = useState(0);
   
@@ -68,7 +78,7 @@ export default function IndieHackerGame() {
   const [bestCombo, setBestCombo] = useState(0);
   
   // Auto-save game state
-  const { loadedGame, username, updateUsername, isLoading } = useAutoSave({
+  const { loadedGame, username, updateUsername, manualSave, isLoading } = useAutoSave({
     money,
     totalEarned: 0, // We'll get from useGameLogic
     totalEarned2,
@@ -539,6 +549,7 @@ export default function IndieHackerGame() {
           clickPower={clickPower}
           username={username}
           onUsernameClick={() => setShowUsernameModal(true)}
+          onSaveClick={handleManualSave}
         />
       </div>
 
