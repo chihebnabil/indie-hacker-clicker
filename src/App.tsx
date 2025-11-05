@@ -156,7 +156,7 @@ export default function IndieHackerGame() {
       setPrestigeTokens(loadedGame.prestigeTokens);
       setFrenzyCount(loadedGame.frenzyCount);
       setGoldenCookieClicks(loadedGame.goldenCookieClicks);
-      setBestCombo(loadedGame.bestCombo);
+  setBestCombo(Math.min(Math.max(loadedGame.bestCombo || 0, 0), 1000));
       showNotification('💾 Game loaded!');
     }
   }, [loadedGame, isLoading]);

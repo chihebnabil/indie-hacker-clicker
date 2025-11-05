@@ -9,6 +9,7 @@
  */
 
 import type * as gameState from "../gameState.js";
+import type * as migrations from "../migrations.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +27,7 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   gameState: typeof gameState;
+  migrations: typeof migrations;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 

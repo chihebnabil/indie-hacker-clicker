@@ -98,22 +98,28 @@ export const saveGame = mutation({
 
     if (existing) {
       // Update existing save
+      // Clamp bestCombo to a reasonable maximum to prevent tampering
+      const sanitizedBestCombo = Math.min(Math.max(args.gameState.bestCombo || 0, 0), 1000);
+
       await ctx.db.patch(existing._id, {
         username: sanitizedUsername,
         projectName: sanitizedProjectName,
         projectUrl: sanitizedProjectUrl,
         ...args.gameState,
+        bestCombo: sanitizedBestCombo,
         lastSaved: Date.now(),
       });
       return { success: true, updated: true };
     } else {
       // Create new save
+      const sanitizedBestCombo = Math.min(Math.max(args.gameState.bestCombo || 0, 0), 1000);
       await ctx.db.insert("gameStates", {
         userId: args.userId,
         username: sanitizedUsername,
         projectName: sanitizedProjectName,
         projectUrl: sanitizedProjectUrl,
         ...args.gameState,
+        bestCombo: sanitizedBestCombo,
         lastSaved: Date.now(),
       });
       return { success: true, updated: false };
