@@ -167,8 +167,10 @@ export default function IndieHackerGame() {
   };
   
   const handlePrestige = () => {
-    if (totalEarned2 >= 1000000000) {
-      const tokensToGain = Math.floor(totalEarned2 / 1000000000);
+    // Use the higher value between totalEarned2 and current money for prestige calculation
+    const prestigeValue = Math.max(totalEarned2, money);
+    if (prestigeValue >= 1000000000) {
+      const tokensToGain = Math.floor(prestigeValue / 1000000000);
       setPrestigeLevel(l => l + 1);
       setPrestigeTokens(t => t + tokensToGain);
       
@@ -577,10 +579,11 @@ export default function IndieHackerGame() {
           getBuildingProduction={getBuildingProduction}
           challenges={challenges}
           achievements={achievements}
-          totalEarned={totalEarned2}
+          totalEarned={Math.max(totalEarned2, money)}
           prestigeLevel={prestigeLevel}
           prestigeTokens={prestigeTokens}
           prestigeMultiplier={prestigeMultiplier}
+          canPrestige={totalEarned2 >= 1000000000 || money >= 1000000000}
           onPrestige={handlePrestige}
         />
       </div>

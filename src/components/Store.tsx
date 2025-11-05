@@ -26,6 +26,7 @@ interface StoreProps {
     prestigeLevel: number;
     prestigeTokens: number;
     prestigeMultiplier: number;
+    canPrestige: boolean;
     onPrestige: () => void;
 }
 
@@ -47,11 +48,11 @@ export default function Store({
     prestigeLevel,
     prestigeTokens,
     prestigeMultiplier,
+    canPrestige,
     onPrestige
 }: StoreProps) {
     const activeChallenges = challenges.filter(c => !c.completed).length;
     const unlockedAchievements = achievements.filter(a => a.unlocked).length;
-    const canPrestige = totalEarned >= 1000000000;
 
     return (
         <div className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-900/30 via-slate-800/20 to-slate-900/30">
