@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameLogic } from './hooks/useGameLogic';
 import { useAutoSave } from './hooks/useAutoSave';
 import { useSEO } from './hooks/useSEO';
