@@ -170,9 +170,9 @@ export default function IndieHackerGame() {
       setTotalClicks(0);
       
       // Reset combo system
-      setComboCount(0);
+      setComboCount(1);
       setComboMultiplier(1);
-      setLastClickTime(0);
+      setLastClickTime(Date.now());
       
       // Reset buildings to initial state - reset count to 0 while keeping other properties
       const resetBuildings: Buildings = Object.keys(buildings).reduce((acc, key) => {
@@ -203,51 +203,53 @@ export default function IndieHackerGame() {
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTime;
     
+    // Determine current combo multiplier before state updates
+    let currentComboMultiplier = 1;
+    let currentComboCount = comboCount;
+    
     // Update combo based on click timing
-    if (timeSinceLastClick < 2000) {
+    if (timeSinceLastClick < 2000 && timeSinceLastClick > 0) {
       // Build combo
-      setComboCount(prev => {
-        const newCombo = prev + 1;
-        
-        // Update combo multiplier based on combo count
-        let newMultiplier = 1;
-        if (newCombo >= 100) newMultiplier = 10;
-        else if (newCombo >= 50) newMultiplier = 5;
-        else if (newCombo >= 25) newMultiplier = 3;
-        else if (newCombo >= 10) newMultiplier = 2;
-        
-        setComboMultiplier(newMultiplier);
-        
-        // Track best combo
-        if (newCombo > bestCombo) {
-          setBestCombo(newCombo);
-          if (newCombo === 10) checkAchievement('a2');
-          if (newCombo === 50) {
-            showNotification('🔥 50 Hit Combo!');
-            checkAchievement('a6');
-          }
-          if (newCombo === 100) {
-            showNotification('🔥🔥 100 Hit MEGA COMBO!');
-            checkAchievement('a10');
-          }
+      currentComboCount = comboCount + 1;
+      
+      // Update combo multiplier based on combo count
+      if (currentComboCount >= 100) currentComboMultiplier = 10;
+      else if (currentComboCount >= 50) currentComboMultiplier = 5;
+      else if (currentComboCount >= 25) currentComboMultiplier = 3;
+      else if (currentComboCount >= 10) currentComboMultiplier = 2;
+      else currentComboMultiplier = 1;
+      
+      setComboCount(currentComboCount);
+      setComboMultiplier(currentComboMultiplier);
+      
+      // Track best combo
+      if (currentComboCount > bestCombo) {
+        setBestCombo(currentComboCount);
+        if (currentComboCount === 10) checkAchievement('a2');
+        if (currentComboCount === 50) {
+          showNotification('🔥 50 Hit Combo!');
+          checkAchievement('a6');
         }
-        
-        return newCombo;
-      });
+        if (currentComboCount === 100) {
+          showNotification('🔥🔥 100 Hit MEGA COMBO!');
+          checkAchievement('a10');
+        }
+      }
     } else {
       // Reset combo
+      currentComboCount = 1;
+      currentComboMultiplier = 1;
       setComboCount(1);
       setComboMultiplier(1);
     }
     
     setLastClickTime(now);
     
-    // Calculate earnings with combo multiplier
-    const baseClickPower = isFinite(clickPower) ? clickPower : 1;
-    const basePrestigeMultiplier = isFinite(prestigeMultiplier) ? prestigeMultiplier : 1;
-    const baseComboMultiplier = isFinite(comboMultiplier) ? comboMultiplier : 1;
+    // Calculate earnings with combo multiplier - use the calculated value, not state
+    const baseClickPower = isFinite(clickPower) && clickPower > 0 ? clickPower : 1;
+    const basePrestigeMultiplier = isFinite(prestigeMultiplier) && prestigeMultiplier > 0 ? prestigeMultiplier : 1;
     const baseEarnings = frenzyMode ? baseClickPower * 7 * basePrestigeMultiplier : baseClickPower * basePrestigeMultiplier;
-    const earnings = baseEarnings * baseComboMultiplier;
+    const earnings = baseEarnings * currentComboMultiplier;
     
     setMoney(m => m + earnings);
     updateTotalEarned(t => t + earnings);
@@ -266,18 +268,18 @@ export default function IndieHackerGame() {
 
     const floater = document.createElement('div');
     floater.className = 'floating-number';
-    floater.textContent = comboMultiplier > 1 ? `+$${formatNumber(earnings)} (×${comboMultiplier})` : `+$${formatNumber(earnings)}`;
+    floater.textContent = currentComboMultiplier > 1 ? `+$${formatNumber(earnings)} (×${currentComboMultiplier})` : `+$${formatNumber(earnings)}`;
     floater.style.left = `${x}px`;
     floater.style.top = `${y}px`;
-    if (comboMultiplier >= 10) {
+    if (currentComboMultiplier >= 10) {
       floater.style.color = '#ef4444';
       floater.style.fontSize = '36px';
       floater.style.textShadow = '0 0 20px rgba(239, 68, 68, 0.8)';
-    } else if (comboMultiplier >= 5) {
+    } else if (currentComboMultiplier >= 5) {
       floater.style.color = '#f59e0b';
       floater.style.fontSize = '32px';
       floater.style.textShadow = '0 0 15px rgba(245, 158, 11, 0.8)';
-    } else if (comboMultiplier >= 3) {
+    } else if (currentComboMultiplier >= 3) {
       floater.style.color = '#fbbf24';
       floater.style.fontSize = '28px';
     }
