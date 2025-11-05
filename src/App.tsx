@@ -654,15 +654,15 @@ export default function IndieHackerGame() {
 
       {/* Notification System - Stacked vertically */}
       <div className="fixed inset-0 pointer-events-none z-40">
-        {/* Top Center Stack - Below header */}
-        <div className="absolute top-[88px] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 max-w-xl">
+        {/* Top Left - Combo Indicator only */}
+        <div className="absolute top-[88px] left-4 flex flex-col items-start gap-2">
           <ComboIndicator comboCount={comboCount} comboMultiplier={comboMultiplier} />
-          {frenzyMode && <FrenzyIndicator frenzyTimer={frenzyTimer} />}
-          {activeTimeEvent && <TimeEventBanner event={activeTimeEvent} />}
         </div>
         
-        {/* Top Right - Quotes and General Notifications */}
+        {/* Top Right - All notifications stacked */}
         <div className="absolute top-[88px] right-4 flex flex-col items-end gap-2 max-w-sm">
+          {frenzyMode && <FrenzyIndicator frenzyTimer={frenzyTimer} />}
+          {activeTimeEvent && <TimeEventBanner event={activeTimeEvent} onClose={() => setActiveTimeEvent(null)} />}
           {notification && <Notification message={notification} />}
           {showQuote && <MotivationalQuote quote={currentQuote} onClose={() => setShowQuote(false)} />}
         </div>
