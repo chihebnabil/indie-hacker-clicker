@@ -95,7 +95,6 @@ export default function IndieHackerGame() {
   const [currentQuote, setCurrentQuote] = useState('');
   const [activeTimeEvent, setActiveTimeEvent] = useState<any>(null);
   const [eventMultiplier, setEventMultiplier] = useState(1);
-  const [konamiProgress, setKonamiProgress] = useState<string[]>([]);
   const [konamiActivated, setKonamiActivated] = useState(false);
   const [milestonesSeen, setMilestonesSeen] = useState<Set<number>>(new Set());
   
@@ -293,19 +292,18 @@ export default function IndieHackerGame() {
 
   // Easter egg: Konami code
   useEffect(() => {
+    let konamiProgress: string[] = [];
+    
     const handleKeyDown = (e: KeyboardEvent) => {
-      setKonamiProgress(prev => {
-        const newProgress = [...prev, e.key].slice(-10);
-        if (newProgress.join(',') === konamiCode.join(',') && !konamiActivated) {
-          setKonamiActivated(true);
-          setClickPower(p => p * 10);
-          setMoney(m => m * 2);
-          checkAchievement('a17'); // Old School Gamer
-          showNotification('🎮 KONAMI CODE ACTIVATED! 10x Click Power + 2x Money! 🚀');
-          setTimeout(() => setKonamiActivated(false), 30000); // Lasts 30 seconds
-        }
-        return newProgress;
-      });
+      konamiProgress = [...konamiProgress, e.key].slice(-10);
+      if (konamiProgress.join(',') === konamiCode.join(',') && !konamiActivated) {
+        setKonamiActivated(true);
+        setClickPower(p => p * 10);
+        setMoney(m => m * 2);
+        checkAchievement('a17'); // Old School Gamer
+        showNotification('🎮 KONAMI CODE ACTIVATED! 10x Click Power + 2x Money! 🚀');
+        setTimeout(() => setKonamiActivated(false), 30000); // Lasts 30 seconds
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
