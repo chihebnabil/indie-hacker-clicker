@@ -322,9 +322,70 @@ export default function IndieHackerGame() {
     }
   }, [activeTimeEvent]);
 
+  // Anti-cheat: Track click patterns
+  const clickTimestamps = useRef<number[]>([]);
+  const [isAutoClickerDetected, setIsAutoClickerDetected] = useState(false);
+  const [clicksDisabledUntil, setClicksDisabledUntil] = useState(0);
+
+  // Clear auto-clicker flag after timeout
+  useEffect(() => {
+    if (isAutoClickerDetected && clicksDisabledUntil > 0) {
+      const timeout = setTimeout(() => {
+        setIsAutoClickerDetected(false);
+        showNotification('✅ Clicks re-enabled. Play fair!');
+      }, clicksDisabledUntil - Date.now());
+      return () => clearTimeout(timeout);
+    }
+  }, [isAutoClickerDetected, clicksDisabledUntil]);
+
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const now = Date.now();
+    
+    // Check if clicks are disabled due to auto-clicker detection
+    if (now < clicksDisabledUntil) {
+      showNotification('⚠️ Auto-clicker detected! Clicks disabled temporarily.');
+      return;
+    }
+    
     const timeSinceLastClick = now - lastClickTime;
+    
+    // Anti-cheat: Track click patterns
+    clickTimestamps.current.push(now);
+    // Keep only last 20 clicks
+    if (clickTimestamps.current.length > 20) {
+      clickTimestamps.current.shift();
+    }
+    
+    // Detect auto-clicker patterns
+    if (clickTimestamps.current.length >= 10) {
+      const recentClicks = clickTimestamps.current.slice(-10);
+      const intervals = [];
+      for (let i = 1; i < recentClicks.length; i++) {
+        intervals.push(recentClicks[i] - recentClicks[i - 1]);
+      }
+      
+      // Check for suspiciously consistent intervals (±5ms variance)
+      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      const variance = intervals.reduce((sum, interval) => sum + Math.abs(interval - avgInterval), 0) / intervals.length;
+      
+      // If clicks are too consistent (variance < 5ms) and fast (< 100ms avg), it's likely an auto-clicker
+      if (variance < 5 && avgInterval < 100) {
+        setIsAutoClickerDetected(true);
+        setClicksDisabledUntil(now + 10000); // Disable for 10 seconds
+        showNotification('🚫 AUTO-CLICKER DETECTED! Clicks disabled for 10 seconds!');
+        clickTimestamps.current = [];
+        return;
+      }
+      
+      // Also check for impossibly fast clicking (< 30ms between clicks sustained)
+      if (avgInterval < 30) {
+        setIsAutoClickerDetected(true);
+        setClicksDisabledUntil(now + 10000);
+        showNotification('🚫 Impossibly fast clicking detected! Take a break!');
+        clickTimestamps.current = [];
+        return;
+      }
+    }
     
     // Determine current combo multiplier before state updates
     let currentComboMultiplier = 1;
@@ -661,6 +722,19 @@ export default function IndieHackerGame() {
         <div className="absolute top-[88px] right-4 flex flex-col items-end gap-2 max-w-sm">
           {frenzyMode && <FrenzyIndicator frenzyTimer={frenzyTimer} />}
           {activeTimeEvent && <TimeEventBanner event={activeTimeEvent} onClose={() => setActiveTimeEvent(null)} />}
+          {isAutoClickerDetected && Date.now() < clicksDisabledUntil && (
+            <div className="bg-gradient-to-r from-red-600 to-orange-600 border-2 border-red-400 rounded-lg p-4 shadow-2xl shadow-red-500/50 animate-pulse">
+              <div className="flex items-center gap-2 text-white">
+                <span className="text-2xl">🚫</span>
+                <div>
+                  <div className="font-black text-sm">AUTO-CLICKER DETECTED</div>
+                  <div className="text-xs opacity-90">
+                    Clicks disabled for {Math.ceil((clicksDisabledUntil - Date.now()) / 1000)}s
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {notification && <Notification message={notification} />}
           {showQuote && <MotivationalQuote quote={currentQuote} onClose={() => setShowQuote(false)} />}
         </div>

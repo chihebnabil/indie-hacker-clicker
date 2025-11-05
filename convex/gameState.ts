@@ -60,6 +60,32 @@ export const saveGame = mutation({
       .query("gameStates")
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .first();
+    
+    // Anti-cheat: Validate click count vs total earned ratio
+    // A reasonable player can't have more than $100 per click on average at early stages
+    if (args.gameState.totalClicks > 0) {
+      const earningsPerClick = args.gameState.totalEarned2 / args.gameState.totalClicks;
+      // Allow up to 10,000 per click (accounts for upgrades, combos, and prestige)
+      const maxEarningsPerClick = 10000 * Math.max(1, args.gameState.prestigeLevel);
+      if (earningsPerClick > maxEarningsPerClick) {
+        throw new Error('Suspicious earnings pattern detected');
+      }
+    }
+    
+    // Anti-cheat: Validate click rate isn't impossibly high
+    if (existing && args.gameState.totalClicks > (existing.totalClicks || 0)) {
+      const timeDiff = (Date.now() - existing.lastSaved) / 1000 / 3600; // hours
+      const clickDiff = args.gameState.totalClicks - (existing.totalClicks || 0);
+      
+      if (timeDiff > 0) {
+        const clickRate = clickDiff / timeDiff;
+        
+        // If clicking faster than 50,000 clicks/hour sustained, likely auto-clicker
+        if (clickRate > 50000) {
+          throw new Error('Impossible click rate detected');
+        }
+      }
+    }
 
     if (existing) {
       // Update existing save
