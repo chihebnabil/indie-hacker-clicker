@@ -72,9 +72,23 @@ export default function IndieHackerGame() {
 
   // Handle manual save
   const handleManualSave = async () => {
-    const success = await manualSave();
-    if (success) {
+    const result = await manualSave();
+    if (result.success) {
       showNotification('💾 Game saved successfully!');
+    } else if (result.cheating) {
+      // Fun cheating messages
+      const funMessages = [
+        '🤨 Nice try, hacker! Your auto-clicker has been noticed...',
+        '🕵️ We see what you did there! Play fair or no leaderboard for you!',
+        '⚠️ Whoa there, speedy! Those are some suspiciously fast fingers...',
+        '🚫 Auto-clicker detected! Did you think we wouldn\'t notice? 😏',
+        '🎮 Slow down cowboy! Humans can\'t click that fast...',
+        '👀 Someone\'s been naughty... No save for cheaters!',
+        '🤖 Are you a bot? Because those stats look... robotic.',
+        '⛔ Error 418: I\'m a teapot, and you\'re a cheater!',
+      ];
+      const randomMessage = funMessages[Math.floor(Math.random() * funMessages.length)];
+      showNotification(randomMessage);
     } else {
       showNotification('❌ Failed to save game');
     }

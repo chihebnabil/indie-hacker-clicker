@@ -104,10 +104,16 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
       });
       lastSaveRef.current = JSON.stringify(gameState);
       console.log('✅ Game manually saved');
-      return true;
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       console.error('❌ Failed to save game:', error);
-      return false;
+      // Check if it's an anti-cheat error
+      if (error?.message?.includes('click rate') || 
+          error?.message?.includes('Suspicious') ||
+          error?.message?.includes('Impossible')) {
+        return { success: false, cheating: true, message: error.message };
+      }
+      return { success: false };
     }
   };
 
@@ -153,7 +159,7 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
     }
   }, [loadedGame, hasLoaded]);
 
-  // Auto-save every 10 seconds (only after initial load)
+  // Auto-save every 5 seconds with debounce (only after initial load)
   useEffect(() => {
     if (!enabled || !hasLoaded) return;
 
@@ -167,7 +173,7 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Debounce save by 2 seconds
+    // Debounce save by 5 seconds to reduce backend calls
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         await saveGame({
@@ -194,10 +200,12 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
         });
         lastSaveRef.current = currentState;
         console.log('✅ Game auto-saved');
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Failed to save game:', error);
+        // Silently fail auto-save to avoid overwhelming the user
+        // They'll see the error on manual save if they're cheating
       }
-    }, 2000);
+    }, 5000); // 5 second debounce to reduce backend load
 
     return () => {
       if (saveTimeoutRef.current) {
