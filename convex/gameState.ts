@@ -26,6 +26,35 @@ export const saveGame = mutation({
     }),
   },
   handler: async (ctx, args) => {
+    // Sanitize and validate user inputs
+    const sanitizedUsername = args.username.trim().slice(0, 50); // Limit length
+    const sanitizedProjectName = args.projectName?.trim().slice(0, 100);
+    const sanitizedProjectUrl = args.projectUrl?.trim().slice(0, 500);
+    
+    // Validate URL format if provided
+    if (sanitizedProjectUrl && sanitizedProjectUrl.length > 0) {
+      try {
+        const url = new URL(sanitizedProjectUrl);
+        // Only allow http/https protocols
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          throw new Error('Invalid URL protocol');
+        }
+      } catch {
+        throw new Error('Invalid project URL format');
+      }
+    }
+    
+    // Validate numeric values are within reasonable ranges
+    if (args.gameState.money < 0 || args.gameState.money > Number.MAX_SAFE_INTEGER) {
+      throw new Error('Invalid money value');
+    }
+    if (args.gameState.prestigeLevel < 0 || args.gameState.prestigeLevel > 10000) {
+      throw new Error('Invalid prestige level');
+    }
+    if (args.gameState.prestigeTokens < 0 || args.gameState.prestigeTokens > 1000000) {
+      throw new Error('Invalid prestige tokens');
+    }
+    
     // Check if user already has a save
     const existing = await ctx.db
       .query("gameStates")
@@ -35,9 +64,9 @@ export const saveGame = mutation({
     if (existing) {
       // Update existing save
       await ctx.db.patch(existing._id, {
-        username: args.username,
-        projectName: args.projectName,
-        projectUrl: args.projectUrl,
+        username: sanitizedUsername,
+        projectName: sanitizedProjectName,
+        projectUrl: sanitizedProjectUrl,
         ...args.gameState,
         lastSaved: Date.now(),
       });
@@ -46,9 +75,9 @@ export const saveGame = mutation({
       // Create new save
       await ctx.db.insert("gameStates", {
         userId: args.userId,
-        username: args.username,
-        projectName: args.projectName,
-        projectUrl: args.projectUrl,
+        username: sanitizedUsername,
+        projectName: sanitizedProjectName,
+        projectUrl: sanitizedProjectUrl,
         ...args.gameState,
         lastSaved: Date.now(),
       });
@@ -91,7 +120,8 @@ export const deleteGame = mutation({
 export const getLeaderboard = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    const limit = args.limit || 100;
+    // Sanitize limit to prevent excessive data retrieval
+    const limit = Math.min(Math.max(args.limit || 100, 1), 100);
     const allGames = await ctx.db.query("gameStates").collect();
     
     // Calculate score for each player considering multiple factors
