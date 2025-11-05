@@ -370,32 +370,52 @@ export default function IndieHackerGame() {
       clickTimestamps.current.shift();
     }
     
-    // Detect auto-clicker patterns
-    if (clickTimestamps.current.length >= 10) {
+    // Detect auto-clicker patterns - check with fewer samples for faster detection
+    if (clickTimestamps.current.length >= 5) {
       const recentClicks = clickTimestamps.current.slice(-10);
       const intervals = [];
       for (let i = 1; i < recentClicks.length; i++) {
         intervals.push(recentClicks[i] - recentClicks[i - 1]);
       }
       
-      // Check for suspiciously consistent intervals (±5ms variance)
+      // Check for suspiciously consistent intervals
       const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
       const variance = intervals.reduce((sum, interval) => sum + Math.abs(interval - avgInterval), 0) / intervals.length;
       
-      // If clicks are too consistent (variance < 5ms) and fast (< 100ms avg), it's likely an auto-clicker
-      if (variance < 5 && avgInterval < 100) {
+      // Stricter detection: variance < 15ms (very consistent) with fast clicking
+      // Human clicking typically has 50-150ms variance
+      if (variance < 15 && avgInterval < 150) {
         setIsAutoClickerDetected(true);
-        setClicksDisabledUntil(now + 10000); // Disable for 10 seconds
-        showNotification('🚫 AUTO-CLICKER DETECTED! Clicks disabled for 10 seconds!');
+        setClicksDisabledUntil(now + 30000); // Disable for 30 seconds (increased penalty)
+        showNotification('🚫 AUTO-CLICKER DETECTED! Clicks disabled for 30 seconds!');
         clickTimestamps.current = [];
         return;
       }
       
-      // Also check for impossibly fast clicking (< 30ms between clicks sustained)
-      if (avgInterval < 30) {
+      // Check for impossibly fast sustained clicking (< 50ms avg = 20 clicks/sec)
+      // Fast human clicking maxes around 10-12 clicks/sec = ~80-100ms
+      if (avgInterval < 50) {
         setIsAutoClickerDetected(true);
-        setClicksDisabledUntil(now + 10000);
-        showNotification('🚫 Impossibly fast clicking detected! Take a break!');
+        setClicksDisabledUntil(now + 30000);
+        showNotification('🚫 Impossibly fast clicking! Are you a robot? 🤖');
+        clickTimestamps.current = [];
+        return;
+      }
+      
+      // Additional check: count how many intervals are suspiciously similar
+      let tooSimilarCount = 0;
+      for (let i = 0; i < intervals.length - 1; i++) {
+        const diff = Math.abs(intervals[i] - intervals[i + 1]);
+        if (diff < 10) { // Less than 10ms difference between consecutive intervals
+          tooSimilarCount++;
+        }
+      }
+      
+      // If more than 60% of intervals are too similar, it's a bot
+      if (tooSimilarCount / (intervals.length - 1) > 0.6) {
+        setIsAutoClickerDetected(true);
+        setClicksDisabledUntil(now + 30000);
+        showNotification('🕵️ Pattern detected! Nice try, but we\'re smarter than your auto-clicker!');
         clickTimestamps.current = [];
         return;
       }

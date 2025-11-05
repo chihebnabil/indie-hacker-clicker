@@ -74,14 +74,23 @@ export const saveGame = mutation({
     
     // Anti-cheat: Validate click rate isn't impossibly high
     if (existing && args.gameState.totalClicks > (existing.totalClicks || 0)) {
-      const timeDiff = (Date.now() - existing.lastSaved) / 1000 / 3600; // hours
+      const timeDiff = (Date.now() - existing.lastSaved) / 1000; // seconds
       const clickDiff = args.gameState.totalClicks - (existing.totalClicks || 0);
       
       if (timeDiff > 0) {
-        const clickRate = clickDiff / timeDiff;
+        const clicksPerSecond = clickDiff / timeDiff;
         
-        // If clicking faster than 50,000 clicks/hour sustained, likely auto-clicker
-        if (clickRate > 50000) {
+        // Human maximum sustained: ~10-12 clicks/sec
+        // Allow up to 15 clicks/sec to account for bursts
+        if (clicksPerSecond > 15) {
+          throw new Error('Impossible click rate detected');
+        }
+        
+        // Also check hourly rate for long sessions
+        const clicksPerHour = clickDiff / (timeDiff / 3600);
+        // 15 clicks/sec × 3600 = 54,000/hour theoretical max
+        // Allow 40,000/hour sustained (accounts for breaks)
+        if (clicksPerHour > 40000) {
           throw new Error('Impossible click rate detected');
         }
       }
