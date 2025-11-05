@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import type { Buildings, Upgrades, GoldenCookie } from '../types/game';
 import { initialBuildings, initialUpgrades, unlockThresholds } from '../data/gameData';
 
+interface UseGameLogicParams {
+  prestigeMultiplier?: number;
+}
+
 interface UseGameLogicReturn {
   money: number;
   setMoney: React.Dispatch<React.SetStateAction<number>>;
@@ -30,7 +34,7 @@ interface UseGameLogicReturn {
   showNotification: (message: string) => void;
 }
 
-export function useGameLogic(): UseGameLogicReturn {
+export function useGameLogic({ prestigeMultiplier = 1 }: UseGameLogicParams = {}): UseGameLogicReturn {
   const [money, setMoney] = useState(0);
   const [moneyPerSecond, setMoneyPerSecond] = useState(0);
   const [clickPower, setClickPower] = useState(1);
@@ -47,6 +51,9 @@ export function useGameLogic(): UseGameLogicReturn {
   const getBuildingProduction = (key: string, building: Buildings[string]) => {
     let production = building.baseProduction * building.count;
 
+    // Ensure production is a valid number
+    if (!isFinite(production)) production = 0;
+
     Object.values(upgrades).forEach(upgrade => {
       if (upgrade.owned && upgrade.type === 'building' && upgrade.building === key) {
         production *= upgrade.multiplier || 1;
@@ -60,7 +67,14 @@ export function useGameLogic(): UseGameLogicReturn {
     });
 
     if (frenzyMode) production *= 7;
-    return production;
+    
+    // Apply prestige multiplier
+    if (prestigeMultiplier && isFinite(prestigeMultiplier)) {
+      production *= prestigeMultiplier;
+    }
+    
+    // Ensure final production is a valid number
+    return isFinite(production) ? production : 0;
   };
 
   const calculateMPS = () => {

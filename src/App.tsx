@@ -17,6 +17,11 @@ import ComboIndicator from './components/ComboIndicator';
 import UsernameModal from './components/UsernameModal';
 
 export default function IndieHackerGame() {
+  // Prestige state (must be declared before useGameLogic to calculate multiplier)
+  const [prestigeLevel, setPrestigeLevel] = useState(0);
+  const [prestigeTokens, setPrestigeTokens] = useState(0);
+  const prestigeMultiplier = 1 + (prestigeTokens * 0.1);
+
   const {
     money,
     setMoney,
@@ -40,7 +45,7 @@ export default function IndieHackerGame() {
     gameAreaRef,
     getBuildingProduction,
     showNotification
-  } = useGameLogic();
+  } = useGameLogic({ prestigeMultiplier });
 
   const [selectedTab, setSelectedTab] = useState<'buildings' | 'upgrades' | 'challenges' | 'achievements' | 'prestige' | 'leaderboard'>('buildings');
   const [showUsernameModal, setShowUsernameModal] = useState(false);
@@ -53,8 +58,6 @@ export default function IndieHackerGame() {
     updateUsername(newUsername);
     setShowUsernameModal(false);
   };
-  const [prestigeLevel, setPrestigeLevel] = useState(0);
-  const [prestigeTokens, setPrestigeTokens] = useState(0);
   const [frenzyCount, setFrenzyCount] = useState(0);
   const [goldenCookieClicks, setGoldenCookieClicks] = useState(0);
   
@@ -63,8 +66,6 @@ export default function IndieHackerGame() {
   const [comboMultiplier, setComboMultiplier] = useState(1);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [bestCombo, setBestCombo] = useState(0);
-  
-  const prestigeMultiplier = 1 + (prestigeTokens * 0.1);
   
   // Auto-save game state
   const { loadedGame, username, updateUsername, isLoading } = useAutoSave({
@@ -168,21 +169,16 @@ export default function IndieHackerGame() {
       setClickPower(1);
       setTotalClicks(0);
       
-      // Reset buildings to initial state
-      const resetBuildings: Buildings = {
-        cursor: { ...buildings.cursor, count: 0 },
-        grandma: { ...buildings.grandma, count: 0 },
-        farm: { ...buildings.farm, count: 0 },
-        mine: { ...buildings.mine, count: 0 },
-        factory: { ...buildings.factory, count: 0 },
-        bank: { ...buildings.bank, count: 0 },
-        temple: { ...buildings.temple, count: 0 },
-        wizardTower: { ...buildings.wizardTower, count: 0 },
-        shipment: { ...buildings.shipment, count: 0 },
-        alchemyLab: { ...buildings.alchemyLab, count: 0 },
-        portal: { ...buildings.portal, count: 0 },
-        timeMachine: { ...buildings.timeMachine, count: 0 },
-      };
+      // Reset combo system
+      setComboCount(0);
+      setComboMultiplier(1);
+      setLastClickTime(0);
+      
+      // Reset buildings to initial state - reset count to 0 while keeping other properties
+      const resetBuildings: Buildings = Object.keys(buildings).reduce((acc, key) => {
+        acc[key] = { ...buildings[key], count: 0 };
+        return acc;
+      }, {} as Buildings);
       setBuildings(resetBuildings);
       
       // Reset upgrades - mark all as not purchased
@@ -195,6 +191,8 @@ export default function IndieHackerGame() {
       setChallenges(initialChallenges);
       setFrenzyCount(0);
       setGoldenCookieClicks(0);
+      setFrenzyMode(false);
+      setFrenzyTimer(0);
       
       showNotification(`🌟 Prestige ${prestigeLevel + 1}! +${tokensToGain} Token${tokensToGain > 1 ? 's' : ''}!`);
       setSelectedTab('buildings');
@@ -245,8 +243,11 @@ export default function IndieHackerGame() {
     setLastClickTime(now);
     
     // Calculate earnings with combo multiplier
-    const baseEarnings = frenzyMode ? clickPower * 7 * prestigeMultiplier : clickPower * prestigeMultiplier;
-    const earnings = baseEarnings * comboMultiplier;
+    const baseClickPower = isFinite(clickPower) ? clickPower : 1;
+    const basePrestigeMultiplier = isFinite(prestigeMultiplier) ? prestigeMultiplier : 1;
+    const baseComboMultiplier = isFinite(comboMultiplier) ? comboMultiplier : 1;
+    const baseEarnings = frenzyMode ? baseClickPower * 7 * basePrestigeMultiplier : baseClickPower * basePrestigeMultiplier;
+    const earnings = baseEarnings * baseComboMultiplier;
     
     setMoney(m => m + earnings);
     updateTotalEarned(t => t + earnings);

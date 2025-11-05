@@ -1,4 +1,7 @@
 export const formatNumber = (num: number): string => {
+  // Handle invalid numbers
+  if (!isFinite(num) || isNaN(num)) return '0';
+  
   if (num >= 1e18) return (num / 1e18).toFixed(3) + ' Qt';
   if (num >= 1e15) return (num / 1e15).toFixed(3) + ' Qd';
   if (num >= 1e12) return (num / 1e12).toFixed(2) + ' T';
