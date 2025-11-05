@@ -4,7 +4,7 @@ import { api } from '../../convex/_generated/api';
 import { formatNumber } from '../utils/gameUtils';
 
 export default function Leaderboard() {
-  const leaderboard = useQuery(api.gameState.getLeaderboard, { limit: 10 });
+  const leaderboard = useQuery(api.gameState.getLeaderboard, { limit: 100 });
 
   if (!leaderboard) {
     return (
