@@ -5,6 +5,8 @@ export default defineSchema({
   gameStates: defineTable({
     userId: v.string(),
     username: v.string(),
+    projectName: v.optional(v.string()),
+    projectUrl: v.optional(v.string()),
     money: v.number(),
     totalEarned: v.number(),
     totalEarned2: v.number(),

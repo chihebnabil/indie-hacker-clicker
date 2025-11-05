@@ -53,9 +53,9 @@ export default function IndieHackerGame() {
   const [challenges, setChallenges] = useState<Challenge[]>(initialChallenges);
   const [achievements, setAchievements] = useState<Achievement[]>(initialAchievements);
 
-  // Handle username save
-  const handleUsernameSave = (newUsername: string) => {
-    updateUsername(newUsername);
+  // Handle username and project info save
+  const handleUsernameSave = (newUsername: string, newProjectName?: string, newProjectUrl?: string) => {
+    updateUsername(newUsername, newProjectName, newProjectUrl);
     setShowUsernameModal(false);
   };
 
@@ -78,7 +78,7 @@ export default function IndieHackerGame() {
   const [bestCombo, setBestCombo] = useState(0);
   
   // Auto-save game state
-  const { loadedGame, username, updateUsername, manualSave, isLoading } = useAutoSave({
+  const { loadedGame, username, projectName, projectUrl, updateUsername, manualSave, isLoading } = useAutoSave({
     money,
     totalEarned: 0, // We'll get from useGameLogic
     totalEarned2,
@@ -588,6 +588,8 @@ export default function IndieHackerGame() {
       {showUsernameModal && (
         <UsernameModal
           currentUsername={username}
+          currentProjectName={projectName}
+          currentProjectUrl={projectUrl}
           onSave={handleUsernameSave}
           onClose={() => setShowUsernameModal(false)}
         />

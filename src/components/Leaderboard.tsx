@@ -1,4 +1,4 @@
-import { Trophy, Medal, Award, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Award, TrendingUp, ExternalLink } from 'lucide-react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { formatNumber } from '../utils/gameUtils';
@@ -66,11 +66,22 @@ export default function Leaderboard() {
                   </span>
                 </div>
 
-                {/* Username */}
+                {/* Username & Project */}
                 <div className="flex-1 min-w-0">
                   <div className="text-lg font-bold text-white truncate">
                     {player.username}
                   </div>
+                  {player.projectName && player.projectUrl ? (
+                    <a
+                      href={player.projectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors group mb-1"
+                    >
+                      <span className="truncate">🚀 {player.projectName}</span>
+                      <ExternalLink className="w-3 h-3 flex-shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </a>
+                  ) : null}
                   <div className="flex items-center gap-3 text-xs text-gray-400">
                     <span className="flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" />

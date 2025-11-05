@@ -6,6 +6,8 @@ export const saveGame = mutation({
   args: {
     userId: v.string(),
     username: v.string(),
+    projectName: v.optional(v.string()),
+    projectUrl: v.optional(v.string()),
     gameState: v.object({
       money: v.number(),
       totalEarned: v.number(),
@@ -34,6 +36,8 @@ export const saveGame = mutation({
       // Update existing save
       await ctx.db.patch(existing._id, {
         username: args.username,
+        projectName: args.projectName,
+        projectUrl: args.projectUrl,
         ...args.gameState,
         lastSaved: Date.now(),
       });
@@ -43,6 +47,8 @@ export const saveGame = mutation({
       await ctx.db.insert("gameStates", {
         userId: args.userId,
         username: args.username,
+        projectName: args.projectName,
+        projectUrl: args.projectUrl,
         ...args.gameState,
         lastSaved: Date.now(),
       });
@@ -96,6 +102,8 @@ export const getLeaderboard = query({
     return sorted.map((game, index) => ({
       rank: index + 1,
       username: game.username,
+      projectName: game.projectName,
+      projectUrl: game.projectUrl,
       totalEarned: game.totalEarned2,
       prestigeLevel: game.prestigeLevel,
       prestigeTokens: game.prestigeTokens,

@@ -1,18 +1,26 @@
-import { User, X } from 'lucide-react';
+import { User, X, Rocket } from 'lucide-react';
 import { useState } from 'react';
 
 interface UsernameModalProps {
   currentUsername: string;
-  onSave: (newUsername: string) => void;
+  currentProjectName?: string;
+  currentProjectUrl?: string;
+  onSave: (newUsername: string, projectName?: string, projectUrl?: string) => void;
   onClose: () => void;
 }
 
-export default function UsernameModal({ currentUsername, onSave, onClose }: UsernameModalProps) {
+export default function UsernameModal({ currentUsername, currentProjectName, currentProjectUrl, onSave, onClose }: UsernameModalProps) {
   const [username, setUsername] = useState(currentUsername);
+  const [projectName, setProjectName] = useState(currentProjectName || '');
+  const [projectUrl, setProjectUrl] = useState(currentProjectUrl || '');
 
   const handleSave = () => {
     if (username.trim()) {
-      onSave(username.trim());
+      onSave(
+        username.trim(), 
+        projectName.trim() || undefined, 
+        projectUrl.trim() || undefined
+      );
       onClose();
     }
   };
@@ -36,24 +44,69 @@ export default function UsernameModal({ currentUsername, onSave, onClose }: User
           </button>
         </div>
 
-        {/* Input */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-gray-300 mb-2">
-            Username
-          </label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-            className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
-            placeholder="Enter your username"
-            autoFocus
-            maxLength={20}
-          />
-          <p className="text-xs text-gray-500 mt-2">
-            This will appear on the leaderboard (max 20 characters)
-          </p>
+        {/* Inputs */}
+        <div className="mb-6 space-y-4">
+          {/* Username */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-300 mb-2">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
+              placeholder="Enter your username"
+              autoFocus
+              maxLength={20}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This will appear on the leaderboard (max 20 characters)
+            </p>
+          </div>
+
+          {/* Project Info Section */}
+          <div className="border-t border-slate-700 pt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Rocket className="w-4 h-4 text-purple-400" />
+              <h3 className="text-sm font-bold text-purple-400">Promote Your Project (Optional)</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {/* Project Name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Project Name
+                </label>
+                <input
+                  type="text"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                  placeholder="e.g. My Awesome SaaS"
+                  maxLength={30}
+                />
+              </div>
+
+              {/* Project URL */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Project URL
+                </label>
+                <input
+                  type="url"
+                  value={projectUrl}
+                  onChange={(e) => setProjectUrl(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                  placeholder="https://your-project.com"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  🚀 Promote your indie project on the leaderboard!
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Buttons */}

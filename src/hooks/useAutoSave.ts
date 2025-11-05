@@ -30,6 +30,24 @@ export const setUsername = (newUsername: string) => {
   return newUsername;
 };
 
+// Get project info
+export const getProjectInfo = () => {
+  if (typeof window === 'undefined') return { projectName: '', projectUrl: '' };
+  return {
+    projectName: localStorage.getItem('indie-hacker-projectName') || '',
+    projectUrl: localStorage.getItem('indie-hacker-projectUrl') || '',
+  };
+};
+
+// Set project info
+export const setProjectInfo = (projectName?: string, projectUrl?: string) => {
+  if (projectName) localStorage.setItem('indie-hacker-projectName', projectName);
+  else localStorage.removeItem('indie-hacker-projectName');
+  
+  if (projectUrl) localStorage.setItem('indie-hacker-projectUrl', projectUrl);
+  else localStorage.removeItem('indie-hacker-projectUrl');
+};
+
 interface GameState {
   money: number;
   totalEarned: number;
@@ -50,6 +68,9 @@ interface GameState {
 export function useAutoSave(gameState: GameState, enabled: boolean = true) {
   const [userId] = useState(getUserId());
   const [username, setUsernameState] = useState(getUsername());
+  const projectInfo = getProjectInfo();
+  const [projectName, setProjectNameState] = useState(projectInfo.projectName);
+  const [projectUrl, setProjectUrlState] = useState(projectInfo.projectUrl);
   const [hasLoaded, setHasLoaded] = useState(false);
   const saveGame = useMutation(api.gameState.saveGame);
   const loadedGame = useQuery(api.gameState.loadGame, { userId });
@@ -62,6 +83,8 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
       await saveGame({
         userId,
         username,
+        projectName: projectName || undefined,
+        projectUrl: projectUrl || undefined,
         gameState: {
           money: gameState.money,
           totalEarned: gameState.totalEarned,
@@ -88,14 +111,20 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
     }
   };
 
-  // Function to update username and trigger re-render
-  const updateUsername = (newUsername: string) => {
+  // Function to update username and project info, then trigger re-render
+  const updateUsername = (newUsername: string, newProjectName?: string, newProjectUrl?: string) => {
     setUsername(newUsername);
     setUsernameState(newUsername);
-    // Force a save immediately with new username
+    setProjectInfo(newProjectName, newProjectUrl);
+    setProjectNameState(newProjectName || '');
+    setProjectUrlState(newProjectUrl || '');
+    
+    // Force a save immediately with new info
     saveGame({
       userId,
       username: newUsername,
+      projectName: newProjectName || undefined,
+      projectUrl: newProjectUrl || undefined,
       gameState: {
         money: gameState.money,
         totalEarned: gameState.totalEarned,
@@ -113,7 +142,7 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
         bestCombo: gameState.bestCombo,
       },
     }).then(() => {
-      console.log('✅ Username updated and saved');
+      console.log('✅ Username and project info updated and saved');
     });
   };
   
@@ -144,6 +173,8 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
         await saveGame({
           userId,
           username,
+          projectName: projectName || undefined,
+          projectUrl: projectUrl || undefined,
           gameState: {
             money: gameState.money,
             totalEarned: gameState.totalEarned,
@@ -207,5 +238,14 @@ export function useAutoSave(gameState: GameState, enabled: boolean = true) {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [gameState, userId, enabled]);
 
-  return { loadedGame, userId, username, updateUsername, manualSave, isLoading: loadedGame === undefined };
+  return { 
+    loadedGame, 
+    userId, 
+    username, 
+    projectName,
+    projectUrl,
+    updateUsername, 
+    manualSave, 
+    isLoading: loadedGame === undefined 
+  };
 }
