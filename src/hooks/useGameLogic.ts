@@ -107,13 +107,43 @@ export function useGameLogic({ prestigeMultiplier = 1 }: UseGameLogicParams = {}
   // Money per second effect
   useEffect(() => {
     const interval = setInterval(() => {
-      const mps = calculateMPS();
-      setMoneyPerSecond(mps);
-      setMoney(m => m + mps / 10);
-      setTotalEarned(t => t + mps / 10);
+      // Calculate MPS inline to properly capture all dependencies
+      let totalMPS = 0;
+      Object.entries(buildings).forEach(([key, building]) => {
+        let production = building.baseProduction * building.count;
+        
+        if (!isFinite(production)) production = 0;
+
+        Object.values(upgrades).forEach(upgrade => {
+          if (upgrade.owned && upgrade.type === 'building' && upgrade.building === key) {
+            production *= upgrade.multiplier || 1;
+          }
+        });
+
+        Object.values(upgrades).forEach(upgrade => {
+          if (upgrade.owned && upgrade.type === 'global') {
+            production *= upgrade.multiplier || 1;
+          }
+        });
+
+        if (frenzyMode) production *= 7;
+        
+        // Apply prestige multiplier
+        if (prestigeMultiplier && isFinite(prestigeMultiplier)) {
+          production *= prestigeMultiplier;
+        }
+        
+        if (isFinite(production)) {
+          totalMPS += production;
+        }
+      });
+      
+      setMoneyPerSecond(totalMPS);
+      setMoney(m => m + totalMPS / 10);
+      setTotalEarned(t => t + totalMPS / 10);
     }, 100);
     return () => clearInterval(interval);
-  }, [buildings, upgrades, frenzyMode]);
+  }, [buildings, upgrades, frenzyMode, prestigeMultiplier]);
 
   // Golden cookie spawning
   useEffect(() => {
