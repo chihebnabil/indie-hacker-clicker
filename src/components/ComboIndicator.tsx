@@ -29,7 +29,7 @@ export default function ComboIndicator({ comboCount, comboMultiplier }: ComboInd
   };
 
   return (
-    <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+    <div className="pointer-events-none">
       <div className={`relative bg-gradient-to-r ${getComboColor()} rounded-2xl px-8 py-4 shadow-2xl animate-bounce`}>
         {/* Glow effect */}
         <div className={`absolute inset-0 bg-gradient-to-r ${getComboColor()} rounded-2xl blur-xl opacity-50 animate-pulse`}></div>

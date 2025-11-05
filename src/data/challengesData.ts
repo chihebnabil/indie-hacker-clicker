@@ -52,6 +52,12 @@ export const initialAchievements: Achievement[] = [
   { id: 'a14', name: 'Click Legend', description: 'Click 100,000 times total', icon: '🌟', unlocked: false, tier: 'platinum' },
   { id: 'a15', name: 'Empire Tycoon', description: 'Own 500 total buildings', icon: '🏰', unlocked: false, tier: 'platinum' },
   { id: 'a16', name: 'Automation King', description: 'Reach $10,000,000/s', icon: '👨‍💼', unlocked: false, tier: 'platinum' },
+  
+  // Hidden/Easter Egg Achievements
+  { id: 'a17', name: 'Old School Gamer', description: 'Enter the Konami Code', icon: '🎮', unlocked: false, tier: 'gold' },
+  { id: 'a18', name: 'Night Owl', description: 'Play during late night coding hours', icon: '🦉', unlocked: false, tier: 'silver' },
+  { id: 'a19', name: 'Weekend Warrior', description: 'Play during the weekend', icon: '⚡', unlocked: false, tier: 'silver' },
+  { id: 'a20', name: 'Bootstrap Legend', description: 'Reject all investor pitches', icon: '🌱', unlocked: false, tier: 'gold' },
 ];
 
 export const prestigeRequirement = 1000000000; // $1B to prestige

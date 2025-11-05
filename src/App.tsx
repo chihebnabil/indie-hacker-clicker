@@ -15,6 +15,17 @@ import FrenzyIndicator from './components/FrenzyIndicator';
 import GoldenCookieComponent from './components/GoldenCookie';
 import ComboIndicator from './components/ComboIndicator';
 import UsernameModal from './components/UsernameModal';
+import InvestorPitchModal from './components/InvestorPitchModal';
+import MotivationalQuote from './components/MotivationalQuote';
+import TimeEventBanner from './components/TimeEventBanner';
+import { 
+  indieHackerQuotes, 
+  investorPitches, 
+  timeBasedEvents, 
+  funMilestones,
+  konamiCode,
+  celebrationMessages 
+} from './data/easterEggs';
 
 export default function IndieHackerGame() {
   // Prestige state (must be declared before useGameLogic to calculate multiplier)
@@ -76,6 +87,17 @@ export default function IndieHackerGame() {
   const [comboMultiplier, setComboMultiplier] = useState(1);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [bestCombo, setBestCombo] = useState(0);
+
+  // Easter egg states
+  const [showInvestorPitch, setShowInvestorPitch] = useState(false);
+  const [currentPitch, setCurrentPitch] = useState<typeof investorPitches[0] | null>(null);
+  const [showQuote, setShowQuote] = useState(false);
+  const [currentQuote, setCurrentQuote] = useState('');
+  const [activeTimeEvent, setActiveTimeEvent] = useState<any>(null);
+  const [eventMultiplier, setEventMultiplier] = useState(1);
+  const [konamiProgress, setKonamiProgress] = useState<string[]>([]);
+  const [konamiActivated, setKonamiActivated] = useState(false);
+  const [milestonesSeen, setMilestonesSeen] = useState<Set<number>>(new Set());
   
   // Auto-save game state
   const { loadedGame, username, projectName, projectUrl, updateUsername, manualSave, isLoading } = useAutoSave({
@@ -211,6 +233,97 @@ export default function IndieHackerGame() {
     }
   };
 
+  // Easter egg: Random motivational quotes
+  useEffect(() => {
+    const quoteInterval = setInterval(() => {
+      if (Math.random() < 0.15) { // 15% chance every interval
+        const randomQuote = indieHackerQuotes[Math.floor(Math.random() * indieHackerQuotes.length)];
+        setCurrentQuote(randomQuote);
+        setShowQuote(true);
+      }
+    }, 60000); // Check every minute
+    return () => clearInterval(quoteInterval);
+  }, []);
+
+  // Easter egg: Random investor pitches
+  useEffect(() => {
+    const pitchInterval = setInterval(() => {
+      if (Math.random() < 0.1 && !showInvestorPitch && money > 10000) { // 10% chance if you have $10k+
+        const randomPitch = investorPitches[Math.floor(Math.random() * investorPitches.length)];
+        setCurrentPitch(randomPitch);
+        setShowInvestorPitch(true);
+      }
+    }, 120000); // Check every 2 minutes
+    return () => clearInterval(pitchInterval);
+  }, [money, showInvestorPitch]);
+
+  // Easter egg: Time-based events
+  useEffect(() => {
+    const checkTimeEvents = () => {
+      let activeEvent = null;
+      let multiplier = 1;
+
+      for (const event of Object.values(timeBasedEvents)) {
+        if (event.check()) {
+          activeEvent = event;
+          multiplier = event.multiplier;
+          break;
+        }
+      }
+
+      setActiveTimeEvent(activeEvent);
+      setEventMultiplier(multiplier);
+    };
+
+    checkTimeEvents();
+    const interval = setInterval(checkTimeEvents, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  // Easter egg: Milestone celebrations
+  useEffect(() => {
+    for (const milestone of funMilestones) {
+      if (money >= milestone.amount && !milestonesSeen.has(milestone.amount)) {
+        setMilestonesSeen(prev => new Set([...prev, milestone.amount]));
+        const celebration = celebrationMessages[Math.floor(Math.random() * celebrationMessages.length)];
+        showNotification(`${milestone.emoji} ${milestone.message} ${celebration}`);
+      }
+    }
+  }, [money, milestonesSeen]);
+
+  // Easter egg: Konami code
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      setKonamiProgress(prev => {
+        const newProgress = [...prev, e.key].slice(-10);
+        if (newProgress.join(',') === konamiCode.join(',') && !konamiActivated) {
+          setKonamiActivated(true);
+          setClickPower(p => p * 10);
+          setMoney(m => m * 2);
+          checkAchievement('a17'); // Old School Gamer
+          showNotification('🎮 KONAMI CODE ACTIVATED! 10x Click Power + 2x Money! 🚀');
+          setTimeout(() => setKonamiActivated(false), 30000); // Lasts 30 seconds
+        }
+        return newProgress;
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [konamiActivated]);
+
+  // Easter egg: Check for time-based achievements
+  useEffect(() => {
+    if (activeTimeEvent) {
+      if (activeTimeEvent.name.includes('Late Night')) {
+        checkAchievement('a18'); // Night Owl
+      }
+      if (activeTimeEvent.name.includes('Weekend')) {
+        checkAchievement('a19'); // Weekend Warrior
+      }
+    }
+  }, [activeTimeEvent]);
+
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTime;
@@ -257,11 +370,11 @@ export default function IndieHackerGame() {
     
     setLastClickTime(now);
     
-    // Calculate earnings with combo multiplier - use the calculated value, not state
+    // Calculate earnings with combo multiplier and event multiplier - use the calculated value, not state
     const baseClickPower = isFinite(clickPower) && clickPower > 0 ? clickPower : 1;
     const basePrestigeMultiplier = isFinite(prestigeMultiplier) && prestigeMultiplier > 0 ? prestigeMultiplier : 1;
     const baseEarnings = frenzyMode ? baseClickPower * 7 * basePrestigeMultiplier : baseClickPower * basePrestigeMultiplier;
-    const earnings = baseEarnings * currentComboMultiplier;
+    const earnings = baseEarnings * currentComboMultiplier * eventMultiplier;
     
     setMoney(m => m + earnings);
     updateTotalEarned(t => t + earnings);
@@ -539,10 +652,40 @@ export default function IndieHackerGame() {
         }
       `}</style>
 
-      {notification && <Notification message={notification} />}
-      {frenzyMode && <FrenzyIndicator frenzyTimer={frenzyTimer} />}
+      {/* Notification System - Stacked vertically */}
+      <div className="fixed inset-0 pointer-events-none z-40">
+        {/* Top Center Stack - Below header */}
+        <div className="absolute top-[88px] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 max-w-xl">
+          <ComboIndicator comboCount={comboCount} comboMultiplier={comboMultiplier} />
+          {frenzyMode && <FrenzyIndicator frenzyTimer={frenzyTimer} />}
+          {activeTimeEvent && <TimeEventBanner event={activeTimeEvent} />}
+        </div>
+        
+        {/* Top Right - Quotes and General Notifications */}
+        <div className="absolute top-[88px] right-4 flex flex-col items-end gap-2 max-w-sm">
+          {notification && <Notification message={notification} />}
+          {showQuote && <MotivationalQuote quote={currentQuote} onClose={() => setShowQuote(false)} />}
+        </div>
+      </div>
+      
+      {/* Full Screen Overlays */}
       {goldenCookie && <GoldenCookieComponent goldenCookie={goldenCookie} onGoldenCookieClick={clickGoldenCookie} />}
-      <ComboIndicator comboCount={comboCount} comboMultiplier={comboMultiplier} />
+      {showInvestorPitch && currentPitch && (
+        <InvestorPitchModal
+          pitch={currentPitch}
+          onChoice={(bonus, message) => {
+            setMoney(m => m * bonus);
+            showNotification(message);
+            setShowInvestorPitch(false);
+          }}
+          onClose={() => setShowInvestorPitch(false)}
+        />
+      )}
+      {konamiActivated && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+          <div className="text-8xl animate-ping">🚀</div>
+        </div>
+      )}
 
       <div className="relative z-10">
         <Header 
