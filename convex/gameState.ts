@@ -125,13 +125,13 @@ export const getLeaderboard = query({
     const allGames = await ctx.db.query("gameStates").collect();
     
     // Calculate score for each player considering multiple factors
-    // Score = totalEarned2 + (prestigeLevel * 1M) + (prestigeTokens * 100K)
-    // This ensures level and tokens are significant but earnings still matter
+    // Weighted scoring: Prestige Level > Tokens > Total Earned
+    // This ensures progression (prestige) is most important
     const withScores = allGames.map(game => ({
       ...game,
-      score: (game.totalEarned2 || 0) + 
-             (game.prestigeLevel * 1000000) + 
-             (game.prestigeTokens * 100000)
+      score: ((game.prestigeLevel || 0) * 10000000) +  // 10M per level (highest priority)
+             ((game.prestigeTokens || 0) * 100000) +    // 100K per token (medium priority)
+             ((game.totalEarned2 || 0) * 0.01)          // 1% of earnings (lowest priority, prevents overflow)
     }));
     
     // Sort by score descending and limit to top 100
